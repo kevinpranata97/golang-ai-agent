@@ -2,7 +2,7 @@
 
 ## 1. Pendahuluan
 
-Dokumen ini menguraikan desain arsitektur untuk agen AI yang akan dikembangkan menggunakan Golang. Agen ini bertujuan untuk mengotomatisasi pembuatan dan pengetesan aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub yang diberikan.
+Dokumen ini menguraikan desain arsitektur untuk agen AI yang akan dikembangkan menggunakan Golang. Agen ini bertujuan untuk mengotomatisasi pembuatan dan pengetesan aplikasi secara umum, termasuk aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub yang diberikan.
 
 ## 2. Komponen Utama
 

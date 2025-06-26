@@ -1,6 +1,6 @@
 # Golang AI Agent
 
-Agen AI yang dikembangkan menggunakan Golang untuk mengotomatisasi pembuatan dan pengetesan aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub.
+Aplikasi AI Agent yang dikembangkan menggunakan Golang untuk mengotomatisasi pembuatan dan pengetesan aplikasi secara umum, termasuk aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub.
 
 ## Fitur Utama
 
