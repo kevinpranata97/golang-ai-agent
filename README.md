@@ -214,6 +214,42 @@ GET /health
 GET /status
 ```
 
+#### Generate Application
+```bash
+POST /generate-app
+```
+**Description:** Generates a new application based on a natural language description.
+**Request Body (JSON):**
+```json
+{
+  "description": "Create a simple blog API with posts and comments"
+}
+```
+
+#### Test Application
+```bash
+POST /test-app
+```
+**Description:** Tests an existing application at a given path.
+**Request Body (JSON):**
+```json
+{
+  "app_path": "/path/to/your/generated_app"
+}
+```
+
+#### Generate and Test Application
+```bash
+POST /generate-and-test
+```
+**Description:** Generates an application and immediately runs tests on it.
+**Request Body (JSON):**
+```json
+{
+  "description": "Create a simple task management API"
+}
+```
+
 #### Webhook Handler
 ```bash
 POST /webhook
