@@ -1,0 +1,65 @@
+{
+  "name": "Generated Application",
+  "app_path": "generated_apps/generated-application",
+  "start_time": "2025-06-26T04:40:40.547279478-04:00",
+  "end_time": "2025-06-26T04:40:40.578296891-04:00",
+  "duration": 31017406,
+  "total_tests": 6,
+  "passed_tests": 2,
+  "failed_tests": 3,
+  "skipped_tests": 1,
+  "coverage": 0,
+  "results": [
+    {
+      "name": "Build Test",
+      "type": "build",
+      "status": "fail",
+      "duration": 6778089,
+      "output": "go: errors parsing go.mod:\ngo.mod:8:2: usage: require module/path v1.2.3\n",
+      "error": "exit status 1"
+    },
+    {
+      "name": "Static Analysis",
+      "type": "static",
+      "status": "fail",
+      "duration": 19028505,
+      "output": "=== go vet ===\ngo: errors parsing go.mod:\ngo.mod:8:2: usage: require module/path v1.2.3\n\n\n=== go fmt ===\ngo: errors parsing go.mod:\ngo.mod:8:2: usage: require module/path v1.2.3\n",
+      "error": "go vet: exit status 1; go fmt: exit status 1"
+    },
+    {
+      "name": "Unit Tests",
+      "type": "unit",
+      "status": "skip",
+      "duration": 551164,
+      "output": "No test files found"
+    },
+    {
+      "name": "API Tests",
+      "type": "api",
+      "status": "fail",
+      "duration": 535857,
+      "output": "",
+      "error": "Failed to start application: fork/exec ./generated-application: no such file or directory"
+    },
+    {
+      "name": "Security Tests",
+      "type": "security",
+      "status": "pass",
+      "duration": 3583283,
+      "output": "Security scan completed. Found 0 potential issues."
+    },
+    {
+      "name": "Performance Tests",
+      "type": "performance",
+      "status": "pass",
+      "duration": 503289,
+      "output": "Lines of code: 139",
+      "details": {
+        "metrics": [
+          "Lines of code: 139"
+        ]
+      }
+    }
+  ],
+  "summary": "Test Summary for Generated Application:\nDuration: 31.017406ms\nTotal Tests: 6\nPassed: 2\nFailed: 3\nSkipped: 1\n\nFailed Tests:\n- Build Test: exit status 1\n- Static Analysis: go vet: exit status 1; go fmt: exit status 1\n- API Tests: Failed to start application: fork/exec ./generated-application: no such file or directory\n\n❌ 3 test(s) failed"
+}
