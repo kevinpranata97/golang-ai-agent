@@ -1,6 +1,88 @@
-# Golang AI Agent
+## Golang AI Agent
 
-Aplikasi AI Agent yang dikembangkan menggunakan Golang untuk mengotomatisasi pembuatan dan pengetesan aplikasi secara umum, termasuk aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub.
+Aplikasi AI Agent yang dikembangkan menggunakan Go (Golang) ini adalah solusi komprehensif untuk **pembuatan dan pengetesan aplikasi secara otomatis**. Agen ini dirancang untuk mengubah deskripsi bahasa alami menjadi aplikasi yang berfungsi penuh, lengkap dengan pengujian, analisis kualitas, dan integrasi CI/CD.
+
+### Fitur Utama:
+
+-   **Generasi Aplikasi Berbasis AI**: Mengubah deskripsi bahasa alami menjadi kode aplikasi Go yang berfungsi penuh (API, Web, CLI).
+-   **Pengujian Komprehensif**: Melakukan unit test, integration test, static analysis, security scan, dan performance benchmark secara otomatis.
+-   **Analisis Cerdas**: Memberikan wawasan mendalam tentang kualitas kode, keamanan, dan performa aplikasi yang dihasilkan.
+-   **Fine-tuning Iteratif**: Secara otomatis mengidentifikasi dan menerapkan perbaikan untuk meningkatkan kualitas dan performa aplikasi.
+-   **Penyimpanan & Debugging**: Menyimpan data proyek, riwayat analisis, dan menyediakan alat debugging.
+-   **Workflow Otomatis**: Integrasi penuh dengan GitHub Actions untuk CI/CD otomatis.
+
+### Struktur Proyek:
+
+-   `main.go`: Titik masuk utama aplikasi.
+-   `internal/agent/`: Logika inti agen AI.
+-   `internal/requirements/`: Modul untuk analisis kebutuhan dari deskripsi bahasa alami.
+-   `internal/codegen/`: Modul untuk menghasilkan kode aplikasi.
+-   `internal/apptesting/`: Modul untuk melakukan pengujian komprehensif pada aplikasi yang dihasilkan.
+-   `internal/analysis/`: Modul untuk analisis kualitas kode dan performa.
+-   `internal/finetuning/`: Modul untuk fine-tuning dan perbaikan otomatis.
+-   `internal/storage/`: Modul untuk persistensi data proyek.
+-   `internal/debugging/`: Modul untuk debugging dan logging.
+-   `Dockerfile`: Konfigurasi untuk membangun image Docker aplikasi.
+-   `.github/workflows/ci-cd.yml`: Definisi pipeline CI/CD GitHub Actions.
+-   `deploy.sh`: Script untuk mempermudah deployment lokal, Docker, atau Docker Compose.
+-   `docker-compose.yml`: Konfigurasi Docker Compose untuk deployment multi-layanan.
+-   `nginx.conf`: Contoh konfigurasi Nginx untuk reverse proxy.
+-   `FINAL_DOCUMENTATION.pdf`: Dokumentasi teknis lengkap proyek.
+
+### Cara Menggunakan (Quick Start):
+
+1.  **Clone Repositori:**
+    ```bash
+    git clone https://github.com/kevinpranata97/golang-ai-agent.git
+    cd golang-ai-agent
+    ```
+
+2.  **Deployment Lokal:**
+    ```bash
+    ./deploy.sh local
+    ```
+    Aplikasi akan berjalan di `http://localhost:8080`.
+
+3.  **Deployment dengan Docker Compose (Disarankan untuk Produksi):**
+    Pastikan Docker dan Docker Compose terinstal.
+    ```bash
+    ./deploy.sh compose
+    ```
+    Aplikasi akan berjalan di `http://localhost:80` (melalui Nginx proxy).
+
+4.  **Menggunakan API (Contoh):**
+
+    **Generate Aplikasi:**
+    ```bash
+    curl -X POST http://localhost:8080/generate-app \
+      -H "Content-Type: application/json" \
+      -d '{"description": "Create a simple blog API with posts and comments"}'
+    ```
+
+    **Generate dan Test Aplikasi Sekaligus:**
+    ```bash
+    curl -X POST http://localhost:8080/generate-and-test \
+      -H "Content-Type: application/json" \
+      -d '{"description": "Create a simple task management API"}'
+    ```
+
+### GitHub Actions CI/CD:
+
+Setiap push ke branch `main` atau `develop` akan memicu pipeline CI/CD otomatis yang mencakup:
+
+-   **Test dan Quality Checks**: Unit test, static analysis, code formatting.
+-   **Build Aplikasi**: Kompilasi aplikasi Go.
+-   **Security Scan**: Pemindaian kerentanan dengan Gosec dan Trivy.
+-   **Build dan Push Docker Image**: Membuat dan mendorong image Docker ke Docker Hub (hanya untuk `main`).
+-   **Integration Tests**: Menguji endpoint API agen.
+-   **Performance Tests**: Mengukur performa endpoint.
+-   **Deployment**: Notifikasi deployment ke lingkungan produksi (jika dikonfigurasi).
+
+Anda dapat memantau status pipeline di halaman GitHub Actions repositori Anda.
+
+---
+
+**Catatan:** Untuk penggunaan fitur yang memerlukan akses ke Google Gemini API atau GitHub API, pastikan Anda telah mengkonfigurasi `GEMINI_API_KEY` dan `GITHUB_TOKEN` di lingkungan Anda atau di file `.env` jika menggunakan Docker Compose.gkan menggunakan Golang untuk mengotomatisasi pembuatan dan pengetesan aplikasi secara umum, termasuk aplikasi berbasis web, analisis, fine-tuning, penyimpanan sederhana, debugging, dan pembuatan workflow otomatis untuk repositori GitHub.
 
 ## Fitur Utama
 
