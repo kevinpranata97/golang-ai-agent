@@ -4,7 +4,8 @@ Aplikasi AI Agent yang dikembangkan menggunakan Go (Golang) ini adalah solusi ko
 
 ### Fitur Utama:
 
--   **Generasi Aplikasi Berbasis AI**: Mengubah deskripsi bahasa alami menjadi kode aplikasi Go yang berfungsi penuh (API, Web, CLI).
+-   **Generasi Aplikasi Berbasis AI**: Mengubah deskripsi bahasa alami menjadi kode aplikasi yang berfungsi penuh dalam berbagai bahasa (Go, Node.js/JavaScript, Python, Java, PHP, Ruby).
+-   **Dukungan Multi-Bahasa**: Agen dapat menghasilkan aplikasi dalam bahasa yang diminta (misalnya, Node.js/JavaScript) dengan struktur proyek yang lengkap, termasuk `package.json`, `app.js`, models, controllers, routes, middleware, konfigurasi database, Dockerfile, dan README.
 -   **Pengujian Komprehensif**: Melakukan unit test, integration test, static analysis, security scan, dan performance benchmark secara otomatis.
 -   **Analisis Cerdas**: Memberikan wawasan mendalam tentang kualitas kode, keamanan, dan performa aplikasi yang dihasilkan.
 -   **Fine-tuning Iteratif**: Secara otomatis mengidentifikasi dan menerapkan perbaikan untuk meningkatkan kualitas dan performa aplikasi.
