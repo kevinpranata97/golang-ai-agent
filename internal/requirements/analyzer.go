@@ -261,17 +261,71 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 	appReq := &ApplicationRequirement{
 		Name:        "Generated Application",
 		Description: userDescription,
-		Language:    "go",
-		Framework:   "gin",
+		Language:    "go", // default
+		Framework:   "gin", // default
 		Database:    "sqlite",
 		Features:    []string{},
 		Entities:    []Entity{},
 		Endpoints:   []APIEndpoint{},
 		Pages:       []UIPage{},
-		Dependencies: []string{"github.com/gin-gonic/gin"},
+		Dependencies: []string{},
 		Config: map[string]interface{}{
 			"port": 8080,
 		},
+	}
+
+	// Detect programming language from description
+	if strings.Contains(desc, "node") || strings.Contains(desc, "nodejs") || strings.Contains(desc, "node.js") || 
+	   strings.Contains(desc, "javascript") || strings.Contains(desc, "js") || strings.Contains(desc, "express") {
+		appReq.Language = "javascript"
+		appReq.Framework = "express"
+		appReq.Dependencies = []string{"express", "cors", "helmet", "morgan"}
+	} else if strings.Contains(desc, "python") || strings.Contains(desc, "flask") || strings.Contains(desc, "django") || strings.Contains(desc, "fastapi") {
+		appReq.Language = "python"
+		if strings.Contains(desc, "django") {
+			appReq.Framework = "django"
+			appReq.Dependencies = []string{"django", "djangorestframework", "django-cors-headers"}
+		} else if strings.Contains(desc, "fastapi") {
+			appReq.Framework = "fastapi"
+			appReq.Dependencies = []string{"fastapi", "uvicorn", "pydantic", "sqlalchemy"}
+		} else {
+			appReq.Framework = "flask"
+			appReq.Dependencies = []string{"flask", "flask-cors", "flask-sqlalchemy", "flask-migrate"}
+		}
+	} else if strings.Contains(desc, "java") || strings.Contains(desc, "spring") || strings.Contains(desc, "springboot") {
+		appReq.Language = "java"
+		appReq.Framework = "spring"
+		appReq.Dependencies = []string{"spring-boot-starter-web", "spring-boot-starter-data-jpa", "spring-boot-starter-security"}
+	} else if strings.Contains(desc, "php") || strings.Contains(desc, "laravel") || strings.Contains(desc, "symfony") {
+		appReq.Language = "php"
+		if strings.Contains(desc, "laravel") {
+			appReq.Framework = "laravel"
+			appReq.Dependencies = []string{"laravel/framework", "laravel/sanctum", "laravel/tinker"}
+		} else {
+			appReq.Framework = "symfony"
+			appReq.Dependencies = []string{"symfony/framework-bundle", "symfony/console", "symfony/dotenv"}
+		}
+	} else if strings.Contains(desc, "ruby") || strings.Contains(desc, "rails") || strings.Contains(desc, "sinatra") {
+		appReq.Language = "ruby"
+		if strings.Contains(desc, "rails") {
+			appReq.Framework = "rails"
+			appReq.Dependencies = []string{"rails", "pg", "puma", "bootsnap"}
+		} else {
+			appReq.Framework = "sinatra"
+			appReq.Dependencies = []string{"sinatra", "sinatra-contrib", "rack-cors"}
+		}
+	} else if strings.Contains(desc, "go") || strings.Contains(desc, "golang") || strings.Contains(desc, "gin") || strings.Contains(desc, "echo") {
+		appReq.Language = "go"
+		if strings.Contains(desc, "echo") {
+			appReq.Framework = "echo"
+			appReq.Dependencies = []string{"github.com/labstack/echo/v4", "github.com/labstack/echo/v4/middleware"}
+		} else if strings.Contains(desc, "fiber") {
+			appReq.Framework = "fiber"
+			appReq.Dependencies = []string{"github.com/gofiber/fiber/v2", "github.com/gofiber/fiber/v2/middleware/cors"}
+		} else {
+			appReq.Framework = "gin"
+			appReq.Dependencies = []string{"github.com/gin-gonic/gin", "github.com/gin-contrib/cors"}
+		}
 	}
 
 	// Determine application type
@@ -282,7 +336,7 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 	} else if strings.Contains(desc, "cli") || strings.Contains(desc, "command") {
 		appReq.Type = "cli"
 	} else {
-		appReq.Type = "web" // default
+		appReq.Type = "api" // default to API for most cases
 	}
 
 	// Extract common entities
@@ -379,7 +433,7 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 			Description: fmt.Sprintf("Update %s", entityLower),
 			Parameters: []EndpointParam{
 				{Name: "id", Type: "int", Required: true, Source: "path"},
-				{Name: "body", Type: entity.Name, Required: true, Source: "body"},
+				{Name: "body", Type: "string", Required: true, Source: "body"},
 			},
 			Response: map[string]string{"data": entity.Name},
 		})
