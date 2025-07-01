@@ -8,9 +8,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 
 	"github.com/kevinpranata97/golang-ai-agent/internal/apptesting"
 	"github.com/kevinpranata97/golang-ai-agent/internal/codegen"
+	"github.com/kevinpranata97/golang-ai-agent/internal/database"
+	"github.com/kevinpranata97/golang-ai-agent/internal/finetuning"
 	"github.com/kevinpranata97/golang-ai-agent/internal/requirements"
 )
 
@@ -25,6 +30,28 @@ func main() {
 	
 	// Initialize application tester
 	appTester := apptesting.NewApplicationTester(outputDir)
+
+	// Initialize Local Database for Fine-tuning
+	dataDir := "./data"
+	db, err := database.NewDB(dataDir)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
+
+	// Initialize Finetuner
+	finetuner := finetuning.NewFinetuner(db)
+
+	// Schedule periodic fine-tuning process
+	go func() {
+		for {
+			log.Println("Running scheduled fine-tuning process...")
+			if err := finetuner.ProcessLogs(); err != nil {
+				log.Printf("Error during scheduled fine-tuning: %v", err)
+			}
+			time.Sleep(5 * time.Minute) // Process every 5 minutes
+		}
+	}()
 
 	// Setup HTTP routes
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -42,6 +69,8 @@ func main() {
 				"code_testing",
 				"requirement_analysis",
 				"github_integration",
+				"fine_tuning",
+				"local_database_storage",
 			},
 		})
 	})
@@ -67,11 +96,21 @@ func main() {
 			return
 		}
 
+		interactionLog := database.InteractionLog{
+			ID:            uuid.New().String(),
+			Timestamp:     time.Now(),
+			Endpoint:      "/generate-app",
+			RequestPayload:  string(request.Description),
+			Status:        "success", // Default to success, update on error
+		}
+
 		// Analyze requirements
 		appReq, err := reqAnalyzer.AnalyzeRequirements(request.Description)
 		if err != nil {
 			log.Printf("Failed to analyze requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to analyze requirements: %v", err), http.StatusInternalServerError)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -79,6 +118,8 @@ func main() {
 		if err := reqAnalyzer.ValidateRequirements(appReq); err != nil {
 			log.Printf("Invalid requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Invalid requirements: %v", err), http.StatusBadRequest)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -86,12 +127,14 @@ func main() {
 		if err := codeGen.GenerateApplication(appReq); err != nil {
 			log.Printf("Failed to generate application: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to generate application: %v", err), http.StatusInternalServerError)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
 		// Return success response
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		jsonResponse, _ := json.Marshal(map[string]interface{}{
 			"success": true,
 			"message": "Application generated successfully",
 			"app": map[string]interface{}{
@@ -104,6 +147,14 @@ func main() {
 				"output_dir":  filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-"))),
 			},
 		})
+		w.Write(jsonResponse)
+
+		interactionLog.ResponsePayload = string(jsonResponse)
+		interactionLog.AppName = appReq.Name
+		interactionLog.AppPath = filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-")))
+		if err := db.InsertInteractionLog(interactionLog); err != nil {
+			log.Printf("Failed to log interaction: %v", err)
+		}
 	})
 
 	// New endpoint for testing generated applications
@@ -127,9 +178,20 @@ func main() {
 			return
 		}
 
+		interactionLog := database.InteractionLog{
+			ID:            uuid.New().String(),
+			Timestamp:     time.Now(),
+			Endpoint:      "/test-app",
+			RequestPayload:  string(request.AppPath),
+			AppPath:       request.AppPath,
+			Status:        "success", // Default to success, update on error
+		}
+
 		// Check if app path exists
 		if _, err := os.Stat(request.AppPath); os.IsNotExist(err) {
 			http.Error(w, "Application path does not exist", http.StatusNotFound)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -146,6 +208,8 @@ func main() {
 		if err != nil {
 			log.Printf("Failed to test application: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to test application: %v", err), http.StatusInternalServerError)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -157,12 +221,25 @@ func main() {
 
 		// Return test results
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		jsonResponse, _ := json.Marshal(map[string]interface{}{
 			"success":      true,
 			"message":      "Application testing completed",
 			"test_suite":   testSuite,
 			"results_file": resultsPath,
 		})
+		w.Write(jsonResponse)
+
+		interactionLog.ResponsePayload = string(jsonResponse)
+		// Assuming testSuite has an OverallStatus field
+		if testSuite.OverallStatus == "failure" {
+			interactionLog.Status = "failure"
+		}
+		// Convert testSuite to JSON string for TestResultsJSON
+		testSuiteJSON, _ := json.Marshal(testSuite)
+		interactionLog.TestResultsJSON = string(testSuiteJSON)
+		if err := db.InsertInteractionLog(interactionLog); err != nil {
+			log.Printf("Failed to log interaction: %v", err)
+		}
 	})
 
 	// Combined endpoint for generating and testing applications
@@ -186,11 +263,21 @@ func main() {
 			return
 		}
 
+		interactionLog := database.InteractionLog{
+			ID:            uuid.New().String(),
+			Timestamp:     time.Now(),
+			Endpoint:      "/generate-and-test",
+			RequestPayload:  string(request.Description),
+			Status:        "success", // Default to success, update on error
+		}
+
 		// Analyze requirements
 		appReq, err := reqAnalyzer.AnalyzeRequirements(request.Description)
 		if err != nil {
 			log.Printf("Failed to analyze requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to analyze requirements: %v", err), http.StatusInternalServerError)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -198,6 +285,8 @@ func main() {
 		if err := reqAnalyzer.ValidateRequirements(appReq); err != nil {
 			log.Printf("Invalid requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Invalid requirements: %v", err), http.StatusBadRequest)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -205,6 +294,8 @@ func main() {
 		if err := codeGen.GenerateApplication(appReq); err != nil {
 			log.Printf("Failed to generate application: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to generate application: %v", err), http.StatusInternalServerError)
+			interactionLog.Status = "failure"
+			db.InsertInteractionLog(interactionLog)
 			return
 		}
 
@@ -228,7 +319,7 @@ func main() {
 
 		// Return success response
 		w.Header().Set("Content-Type", "application/json")
-		response := map[string]interface{}{
+		responseMap := map[string]interface{}{
 			"success": true,
 			"message": "Application generated and tested successfully",
 			"app": map[string]interface{}{
@@ -243,7 +334,7 @@ func main() {
 		}
 
 		if testSuite != nil {
-			response["test_results"] = map[string]interface{}{
+			responseMap["test_results"] = map[string]interface{}{
 				"total_tests":    testSuite.TotalTests,
 				"passed_tests":   testSuite.PassedTests,
 				"failed_tests":   testSuite.FailedTests,
@@ -254,8 +345,23 @@ func main() {
 				"summary":        testSuite.Summary,
 			}
 		}
+		jsonResponse, _ := json.Marshal(responseMap)
+		w.Write(jsonResponse)
 
-		json.NewEncoder(w).Encode(response)
+		interactionLog.ResponsePayload = string(jsonResponse)
+		interactionLog.AppName = appReq.Name
+		interactionLog.AppPath = appPath
+		if testSuite != nil {
+			// Convert testSuite to JSON string for TestResultsJSON
+			testSuiteJSON, _ := json.Marshal(testSuite)
+			interactionLog.TestResultsJSON = string(testSuiteJSON)
+			if testSuite.OverallStatus == "failure" {
+				interactionLog.Status = "failure"
+			}
+		}
+		if err := db.InsertInteractionLog(interactionLog); err != nil {
+			log.Printf("Failed to log interaction: %v", err)
+		}
 	})
 
 	// Webhook endpoint (existing functionality)
@@ -289,4 +395,3 @@ func main() {
 		log.Fatal("Server failed to start:", err)
 	}
 }
-

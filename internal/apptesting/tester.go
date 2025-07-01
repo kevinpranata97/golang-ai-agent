@@ -43,6 +43,7 @@ type TestSuite struct {
 	Coverage     float64      `json:"coverage"`
 	Results      []TestResult `json:"results"`
 	Summary      string       `json:"summary"`
+	OverallStatus string       `json:"overall_status"` // Added field
 }
 
 // ApplicationTester handles testing of generated applications
@@ -108,6 +109,14 @@ func (at *ApplicationTester) TestApplication(appPath string, appReq *requirement
 		case "skip":
 			suite.SkippedTests++
 		}
+	}
+
+	if suite.FailedTests > 0 {
+		suite.OverallStatus = "failure"
+	} else if suite.PassedTests > 0 {
+		suite.OverallStatus = "success"
+	} else {
+		suite.OverallStatus = "skipped"
 	}
 
 	// Calculate overall coverage (average of all coverage results)
@@ -533,7 +542,7 @@ func (at *ApplicationTester) scanForSecurityIssues(appPath string) []string {
 			}
 			
 			// Check for hardcoded passwords
-			if regexp.MustCompile(`password\s*[:=]\s*["'][^"']+["']`).MatchString(strings.ToLower(contentStr)) {
+			if regexp.MustCompile(`password\s*[:=]\s*[""][^"\]+[""]`).MatchString(strings.ToLower(contentStr)) {
 				issues = append(issues, fmt.Sprintf("Potential hardcoded password in %s", path))
 			}
 		}
@@ -553,10 +562,10 @@ func (at *ApplicationTester) scanForHardcodedSecrets(appPath string) []string {
 	var secrets []string
 	
 	patterns := []*regexp.Regexp{
-		regexp.MustCompile(`(?i)api[_-]?key\s*[:=]\s*["'][^"']{10,}["']`),
-		regexp.MustCompile(`(?i)secret[_-]?key\s*[:=]\s*["'][^"']{10,}["']`),
-		regexp.MustCompile(`(?i)token\s*[:=]\s*["'][^"']{10,}["']`),
-		regexp.MustCompile(`(?i)password\s*[:=]\s*["'][^"']{8,}["']`),
+		regexp.MustCompile(`(?i)api[_-]?key\s*[:=]\s*[""][^"\]{10,}[""]`),
+		regexp.MustCompile(`(?i)secret[_-]?key\s*[:=]\s*[""][^"\]{10,}[""]`),
+		regexp.MustCompile(`(?i)token\s*[:=]\s*[""][^"\]{10,}[""]`),
+		regexp.MustCompile(`(?i)password\s*[:=]\s*[""][^"\]{8,}[""]`),
 	}
 	
 	err := filepath.Walk(appPath, func(path string, info os.FileInfo, err error) error {
@@ -608,51 +617,48 @@ func (at *ApplicationTester) countLinesOfCode(appPath string) (int, error) {
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				line := strings.TrimSpace(scanner.Text())
-				if line != "" && !strings.HasPrefix(line, "//") {
+				if len(line) > 0 && !strings.HasPrefix(line, "//") {
 					totalLines++
 				}
+			}
+			
+			if err := scanner.Err(); err != nil {
+				return err
 			}
 		}
 		
 		return nil
 	})
 	
-	return totalLines, err
+	if err != nil {
+		return 0, err
+	}
+	
+	return totalLines, nil
 }
 
-// generateSummary generates a summary of the test results
+// generateSummary generates a summary of the test suite
 func (at *ApplicationTester) generateSummary(suite *TestSuite) string {
 	var summary strings.Builder
-	
-	summary.WriteString(fmt.Sprintf("Test Summary for %s:\n", suite.Name))
-	summary.WriteString(fmt.Sprintf("Duration: %v\n", suite.Duration))
-	summary.WriteString(fmt.Sprintf("Total Tests: %d\n", suite.TotalTests))
-	summary.WriteString(fmt.Sprintf("Passed: %d\n", suite.PassedTests))
-	summary.WriteString(fmt.Sprintf("Failed: %d\n", suite.FailedTests))
-	summary.WriteString(fmt.Sprintf("Skipped: %d\n", suite.SkippedTests))
-	
+	summary.WriteString(fmt.Sprintf("Test Suite: %s\n", suite.Name))
+	summary.WriteString(fmt.Sprintf("Total Tests: %d, Passed: %d, Failed: %d, Skipped: %d\n", 
+		suite.TotalTests, suite.PassedTests, suite.FailedTests, suite.SkippedTests))
+	summary.WriteString(fmt.Sprintf("Duration: %s\n", suite.Duration.Round(time.Millisecond)))
 	if suite.Coverage > 0 {
 		summary.WriteString(fmt.Sprintf("Coverage: %.2f%%\n", suite.Coverage))
 	}
-	
-	if suite.FailedTests > 0 {
-		summary.WriteString("\nFailed Tests:\n")
-		for _, result := range suite.Results {
-			if result.Status == "fail" {
-				summary.WriteString(fmt.Sprintf("- %s: %s\n", result.Name, result.Error))
-			}
+
+	for _, result := range suite.Results {
+		summary.WriteString(fmt.Sprintf("- %s (%s): %s\n", result.Name, result.Type, strings.ToUpper(result.Status)))
+		if result.Error != "" {
+			summary.WriteString(fmt.Sprintf("  Error: %s\n", result.Error))
 		}
 	}
-	
-	// Overall status
-	if suite.FailedTests == 0 {
-		summary.WriteString("\n✅ All tests passed!")
-	} else {
-		summary.WriteString(fmt.Sprintf("\n❌ %d test(s) failed", suite.FailedTests))
-	}
-	
+
 	return summary.String()
 }
+
+
 
 // SaveTestResults saves test results to a file
 func (at *ApplicationTester) SaveTestResults(suite *TestSuite, outputPath string) error {
@@ -663,4 +669,5 @@ func (at *ApplicationTester) SaveTestResults(suite *TestSuite, outputPath string
 	
 	return os.WriteFile(outputPath, data, 0644)
 }
+
 
