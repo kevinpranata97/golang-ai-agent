@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"time"
 
 	"github.com/kevinpranata97/golang-ai-agent/internal/agent"
 	"github.com/kevinpranata97/golang-ai-agent/internal/github"
@@ -66,7 +65,6 @@ func TestStorage(t *testing.T) {
 	// Test storing data
 	testData := map[string]interface{}{
 		"test_key": "test_value",
-		"timestamp": time.Now(),
 	}
 	
 	err := storage.Store("test_item", testData)
@@ -88,4 +86,5 @@ func TestStorage(t *testing.T) {
 	// Cleanup
 	storage.Delete("test_item")
 }
+
 

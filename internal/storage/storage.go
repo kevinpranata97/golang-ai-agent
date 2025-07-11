@@ -94,6 +94,11 @@ type Storage interface {
 	GetAnalysis(projectID string) ([]*AnalysisData, error)
 	GetProjectStats() (*ProjectStats, error)
 	Cleanup(olderThan time.Duration) error
+
+	// Methods for generic data storage
+	Store(key string, data interface{}) error
+	Retrieve(key string, result interface{}) error
+	Delete(key string) error
 }
 
 // ProjectStats represents overall project statistics
@@ -126,12 +131,63 @@ func (fs *FileStorage) Initialize() error {
 		filepath.Join(fs.baseDir, "projects"),
 		filepath.Join(fs.baseDir, "analysis"),
 		filepath.Join(fs.baseDir, "backups"),
+		filepath.Join(fs.baseDir, "generic_data"), // New directory for generic data
 	}
 
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0755); err != nil {
 			return fmt.Errorf("failed to create directory %s: %v", dir, err)
 		}
+	}
+
+	return nil
+}
+
+// Store saves generic data to storage
+func (fs *FileStorage) Store(key string, data interface{}) error {
+	if err := fs.Initialize(); err != nil {
+		return err
+	}
+
+	filePath := filepath.Join(fs.baseDir, "generic_data", key+".json")
+	encodedData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal data: %v", err)
+	}
+
+	if err := os.WriteFile(filePath, encodedData, 0644); err != nil {
+		return fmt.Errorf("failed to write data file: %v", err)
+	}
+
+	return nil
+}
+
+// Retrieve retrieves generic data from storage
+func (fs *FileStorage) Retrieve(key string, result interface{}) error {
+	filePath := filepath.Join(fs.baseDir, "generic_data", key+".json")
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("data not found for key: %s", key)
+		}
+		return fmt.Errorf("failed to read data file: %v", err)
+	}
+
+	if err := json.Unmarshal(data, result); err != nil {
+		return fmt.Errorf("failed to unmarshal data: %v", err)
+	}
+
+	return nil
+}
+
+// Delete deletes generic data from storage
+func (fs *FileStorage) Delete(key string) error {
+	filePath := filepath.Join(fs.baseDir, "generic_data", key+".json")
+	if err := os.Remove(filePath); err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("data not found for key: %s", key)
+		}
+		return fmt.Errorf("failed to delete data file: %v", err)
 	}
 
 	return nil
@@ -294,6 +350,10 @@ func (fs *FileStorage) GetProjectStats() (*ProjectStats, error) {
 
 	stats := &ProjectStats{
 		TotalProjects:     len(projects),
+		CompletedProjects: 0,
+		FailedProjects:    0,
+		AvgTestCoverage:   0.0,
+		AvgBuildTime:      0.0,
 		PopularLanguages:  make(map[string]int),
 		PopularFrameworks: make(map[string]int),
 		RecentActivity:    []ProjectData{},
@@ -315,7 +375,13 @@ func (fs *FileStorage) GetProjectStats() (*ProjectStats, error) {
 
 		// Count languages and frameworks
 		if project.Requirements != nil {
+			if stats.PopularLanguages == nil {
+				stats.PopularLanguages = make(map[string]int)
+			}
 			stats.PopularLanguages[project.Requirements.Language]++
+			if stats.PopularFrameworks == nil {
+				stats.PopularFrameworks = make(map[string]int)
+			}
 			stats.PopularFrameworks[project.Requirements.Framework]++
 		}
 
@@ -326,8 +392,8 @@ func (fs *FileStorage) GetProjectStats() (*ProjectStats, error) {
 				coverageCount++
 			}
 			
-			buildTimeCount++
 			totalBuildTime += project.TestResults.Duration.Seconds()
+			buildTimeCount++
 		}
 
 		// Recent activity (last 10 projects)
@@ -393,4 +459,5 @@ func (fs *FileStorage) Cleanup(olderThan time.Duration) error {
 
 	return nil
 }
+
 

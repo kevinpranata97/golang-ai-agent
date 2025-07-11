@@ -15,5 +15,9 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 	// API routes
 	api := r.Group("/api")
 	{
+		api.POST("/tasks", h.AddTask)
+		api.GET("/tasks", h.ListTasks)
+		api.PUT("/tasks/:id", h.UpdateTask)
+		api.DELETE("/tasks/:id", h.DeleteTask)
 	}
 }

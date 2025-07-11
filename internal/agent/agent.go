@@ -5,6 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"time"
+
+	"github.com/kevinpranata97/golang-ai-agent/internal/github"
+	"github.com/kevinpranata97/golang-ai-agent/internal/storage"
+	testingpkg "github.com/kevinpranata97/golang-ai-agent/internal/testing"
+	"github.com/kevinpranata97/golang-ai-agent/internal/workflow"
 )
 
 // Agent represents the core AI agent
@@ -13,6 +18,10 @@ type Agent struct {
 	Status    string
 	CreatedAt time.Time
 	Jobs      map[string]*Job
+	Storage *storage.FileStorage
+	GithubClient *github.Client
+	TestRunner *testingpkg.TestRunner
+	WorkflowEngine *workflow.Engine
 }
 
 // Job represents a processing job
@@ -28,12 +37,16 @@ type Job struct {
 }
 
 // NewAgent creates a new AI agent instance
-func NewAgent() *Agent {
+func NewAgent(storage *storage.FileStorage, githubClient *github.Client, testRunner *testingpkg.TestRunner, workflowEngine *workflow.Engine) *Agent {
 	return &Agent{
 		ID:        generateID(),
 		Status:    "idle",
 		CreatedAt: time.Now(),
 		Jobs:      make(map[string]*Job),
+		Storage: storage,
+		GithubClient: githubClient,
+		TestRunner: testRunner,
+		WorkflowEngine: workflowEngine,
 	}
 }
 
@@ -121,4 +134,5 @@ func (a *Agent) FailJob(jobID string, err error) error {
 	job.Error = err.Error()
 	return nil
 }
+
 

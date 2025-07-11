@@ -41,8 +41,7 @@ func main() {
 	})
 
 	// Initialize handlers
-	h := handlers.New(db)
-
+	h := handlers.NewHandler(db)
 	// Setup routes
 	routes.Setup(r, h)
 
