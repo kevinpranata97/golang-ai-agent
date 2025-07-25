@@ -297,43 +297,52 @@ func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.Analysi
 					Type:        "functionality",
 					Priority:    "high",
 					Description: fmt.Sprintf("Test failure in %s: %s", result.Name, result.Error),
-					Impact:      "Fixed functionality and improved reliability",
-					Effort:      "medium",
+					Impact:      "Fixed functionality and improved re					Effort:      "medium",
+					TargetFile:  "main.go", // Example target file
+					Code:        "// Old code:::// New code", // Example modification format OLD_CODE:::NEW_CODE
 				})
 			}
 		}
-	}
 
-	// Framework-specific suggestions
-	if appReq != nil {
-		switch appReq.Framework {
-		case "gin":
-			suggestions = append(suggestions, storage.ImprovementSuggestion{
-				Type:        "functionality",
-				Priority:    "low",
-				Description: "Consider adding middleware for logging, rate limiting, and request validation.",
-				Impact:      "Better observability and security",
-				Effort:      "low",
-			})
+		// Framework-specific suggestions
+		if appReq != nil {
+			switch appReq.Framework {
+			case "gin":
+				suggestions = append(suggestions, storage.ImprovementSuggestion{
+					Type:        "functionality",
+					Priority:    "low",
+					Description: "Consider adding middleware for logging, rate limiting, and request validation.",
+					Impact:      "Better observability and security",
+					Effort:      "low",
+				})
+			}
+
+			// Database-specific suggestions
+			switch appReq.Database {
+			case "sqlite":
+				suggestions = append(suggestions, storage.ImprovementSuggestion{
+					Type:        "performance",
+					Priority:    "medium",
+					Description: "Consider migrating to PostgreSQL or MySQL for production use.",
+					Impact:      "Better performance and scalability",
+					Effort:      "high",
+				})
+			}
 		}
 
-		// Database-specific suggestions
-		switch appReq.Database {
-		case "sqlite":
-			suggestions = append(suggestions, storage.ImprovementSuggestion{
-				Type:        "performance",
-				Priority:    "medium",
-				Description: "Consider migrating to PostgreSQL or MySQL for production use.",
-				Impact:      "Better performance and scalability",
-				Effort:      "high",
-			})
-		}
-	}
+		// Example of a suggestion that requires code modification
+		suggestions = append(suggestions, storage.ImprovementSuggestion{
+			Type:        "quality",
+			Priority:    "low",
+			Description: "Replace hardcoded port with environment variable.",
+			Impact:      "Improved flexibility and security",
+			Effort:      "low",
+			TargetFile:  "main.go",
+			Code:        "8080:::os.Getenv(\"PORT\")",
+		})
 
-	return suggestions
-}
-
-// Helper methods for analysis
+		return suggestions
+	} methods for analysis
 
 // countLinesOfCode counts non-empty, non-comment lines of code
 func (ca *CodeAnalyzer) countLinesOfCode(appPath string) (int, error) {

@@ -93,8 +93,9 @@ func (d *DB) InsertInteractionLog(logEntry InteractionLog) error {
 	stmt, err := d.Prepare(`
 	INSERT INTO interactions_log (
 		id, timestamp, endpoint, request_payload, response_payload, app_name, app_path,
-		test_results_json, analysis_results_json, feedback_json, status, processed_for_finetuning
-	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		test_results_json, analysis_results_json, feedback_json, status, processed_for_finetuning,
+		applied_suggestion_json, fix_status, fix_output, retest_results_json
+	) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare insert statement: %w", err)
@@ -114,6 +115,10 @@ func (d *DB) InsertInteractionLog(logEntry InteractionLog) error {
 		logEntry.FeedbackJSON,
 		logEntry.Status,
 		logEntry.ProcessedForFinetuning,
+		logEntry.AppliedSuggestionJSON,
+		logEntry.FixStatus,
+		logEntry.FixOutput,
+		logEntry.RetestResultsJSON,
 	)
 	return err
 }

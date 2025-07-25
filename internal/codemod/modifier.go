@@ -2,106 +2,42 @@ package codemod
 
 import (
 	"fmt"
-	"os"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 )
 
 // CodeModifier handles programmatic modification of code files.
-// This is a simplified placeholder. A real implementation would involve AST manipulation,
-// regex-based replacements, or even LLM-driven code generation for complex changes.
-type CodeModifier struct {
-	// Configuration or tools for code modification
-}
+type CodeModifier struct{}
 
+// NewCodeModifier creates a new CodeModifier instance.
 func NewCodeModifier() *CodeModifier {
 	return &CodeModifier{}
 }
 
-// ApplyModification applies a specific code modification to a file.
-// This function would be called by SelfHealer for suggestions that don't have direct shell commands.
-func (cm *CodeModifier) ApplyModification(filePath, modificationType, targetContent, newContent string) error {
-	// Example: Replace targetContent with newContent in the file
-	// This is a very basic string replacement and needs to be much more robust for real use.
+// ApplyModification applies a given code modification to a target file.
+// The 'modification' string can be a simple replacement, or a more complex instruction
+// that the LLM (or a more sophisticated parser) would interpret.
+// For simplicity, this example assumes 'modification' is a direct string replacement
+// in the format "OLD_CODE:::NEW_CODE".
+func (cm *CodeModifier) ApplyModification(appPath, targetFile, modification string) error {
+	filePath := filepath.Join(appPath, targetFile)
 
-	content, err := os.ReadFile(filePath)
+	content, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", filePath, err)
 	}
 
-	originalContent := string(content)
-	modifiedContent := strings.ReplaceAll(originalContent, targetContent, newContent)
-
-	if originalContent == modifiedContent {
-		return fmt.Errorf("modification did not find target content in %s", filePath)
+	parts := strings.SplitN(modification, ":::", 2)
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid modification format. Expected 'OLD_CODE:::NEW_CODE'")
 	}
+	oldCode := parts[0]
+	newCode := parts[1]
 
-	if err := os.WriteFile(filePath, []byte(modifiedContent), 0644); err != nil {
-		return fmt.Errorf("failed to write modified file %s: %w", filePath, err)
-	}
+	modifiedContent := strings.ReplaceAll(string(content), oldCode, newCode)
 
-	return nil
-}
-
-// AddLineToFile adds a line of code to a specific position in a file.
-func (cm *CodeModifier) AddLineToFile(filePath, lineContent string, afterLine string) error {
-	// Simplified: finds 'afterLine' and inserts 'lineContent' after it.
-	// More advanced logic would handle indentation, context, etc.
-
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-
-	lines := strings.Split(string(content), "\n")
-	var newLines []string
-	inserted := false
-
-	for _, line := range lines {
-		newLines = append(newLines, line)
-		if strings.Contains(line, afterLine) && !inserted {
-			newLines = append(newLines, lineContent)
-			inserted = true
-		}
-	}
-
-	if !inserted {
-		return fmt.Errorf("could not find target line '%s' in %s", afterLine, filePath)
-	}
-
-	if err := os.WriteFile(filePath, []byte(strings.Join(newLines, "\n")), 0644); err != nil {
-		return fmt.Errorf("failed to write modified file %s: %w", filePath, err)
-	}
-
-	return nil
-}
-
-// DeleteLineFromFile deletes a specific line of code from a file.
-func (cm *CodeModifier) DeleteLineFromFile(filePath, lineContent string) error {
-	// Simplified: removes 'lineContent' from the file.
-
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", filePath, err)
-	}
-
-	lines := strings.Split(string(content), "\n")
-	var newLines []string
-	deleted := false
-
-	for _, line := range lines {
-		if strings.Contains(line, lineContent) && !deleted {
-			deleted = true
-			continue // Skip this line
-		}
-		newLines = append(newLines, line)
-	}
-
-	if !deleted {
-		return fmt.Errorf("could not find target line '%s' in %s", lineContent, filePath)
-	}
-
-	if err := os.WriteFile(filePath, []byte(strings.Join(newLines, "\n")), 0644); err != nil {
+	if err := ioutil.WriteFile(filePath, []byte(modifiedContent), 0644); err != nil {
 		return fmt.Errorf("failed to write modified file %s: %w", filePath, err)
 	}
 
