@@ -1,1 +1,37 @@
 go build github.com/mattn/go-sqlite3: gcc: chdir /home/ubuntu/go/pkg/mod/github.com/mattn/go-sqlite3@v1.14.28: no such file or directory
+2025/07/24 23:29:51 Database initialized at data/finetuning.db
+2025/07/24 23:29:51 Server starting on port 8080
+2025/07/24 23:29:51 Available endpoints:
+2025/07/24 23:29:51   GET  /health - Health check
+2025/07/24 23:29:51   GET  /status - Agent status
+2025/07/24 23:29:51   POST /generate-app - Generate application from description
+2025/07/24 23:29:51   POST /test-app - Test generated application
+2025/07/24 23:29:51   POST /generate-and-test - Generate and test application
+2025/07/24 23:29:51   POST /webhook - GitHub webhook
+2025/07/24 23:29:51 Running scheduled fine-tuning process...
+2025/07/24 23:29:51 No new interaction logs to process for fine-tuning.
+2025/07/24 23:29:58 Database initialized at data/finetuning.db
+2025/07/24 23:29:58 Server starting on port 8080
+2025/07/24 23:29:58 Available endpoints:
+2025/07/24 23:29:58   GET  /health - Health check
+2025/07/24 23:29:58   GET  /status - Agent status
+2025/07/24 23:29:58   POST /generate-app - Generate application from description
+2025/07/24 23:29:58   POST /test-app - Test generated application
+2025/07/24 23:29:58   POST /generate-and-test - Generate and test application
+2025/07/24 23:29:58   POST /webhook - GitHub webhook
+2025/07/24 23:29:58 Running scheduled fine-tuning process...
+2025/07/24 23:29:58 Server failed to start:listen tcp 0.0.0.0:8080: bind: address already in use
+2025/07/24 23:30:11 Database initialized at data/finetuning.db
+2025/07/24 23:30:11 Server starting on port 8080
+2025/07/24 23:30:11 Available endpoints:
+2025/07/24 23:30:11   GET  /health - Health check
+2025/07/24 23:30:11   GET  /status - Agent status
+2025/07/24 23:30:11   POST /generate-app - Generate application from description
+2025/07/24 23:30:11   POST /test-app - Test generated application
+2025/07/24 23:30:11   POST /generate-and-test - Generate and test application
+2025/07/24 23:30:11   POST /webhook - GitHub webhook
+2025/07/24 23:30:11 Running scheduled fine-tuning process...
+2025/07/24 23:30:11 Server failed to start:listen tcp 0.0.0.0:8080: bind: address already in use
+2025/07/24 23:34:51 Running scheduled fine-tuning process...
+2025/07/24 23:34:51 Processing 1 interaction logs for fine-tuning...
+2025/07/24 23:34:51 Successfully processed 1 logs for fine-tuning.

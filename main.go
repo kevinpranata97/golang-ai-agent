@@ -17,6 +17,7 @@ import (
 	"github.com/kevinpranata97/golang-ai-agent/internal/database"
 	"github.com/kevinpranata97/golang-ai-agent/internal/finetuning"
 	"github.com/kevinpranata97/golang-ai-agent/internal/requirements"
+	"github.com/kevinpranata97/golang-ai-agent/internal/selfheal"
 )
 
 func main() {
@@ -41,6 +42,9 @@ func main() {
 
 	// Initialize Finetuner
 	finetuner := finetuning.NewFinetuner(db)
+
+	// Initialize SelfHealer
+	selfHealer := selfheal.NewSelfHealer(reqAnalyzer.CodeAnalyzer, appTester, db)
 
 	// Schedule periodic fine-tuning process
 	go func() {
@@ -357,6 +361,13 @@ func main() {
 			interactionLog.TestResultsJSON = string(testSuiteJSON)
 			if testSuite.OverallStatus == "failure" {
 				interactionLog.Status = "failure"
+				log.Printf("Application %s failed tests. Attempting self-fix...", appReq.Name)
+				err := selfHealer.AttemptSelfFix(interactionLog.ID, appPath, appReq)
+				if err != nil {
+					log.Printf("Self-fix failed for project %s: %v", interactionLog.ID, err)
+				} else {
+					log.Printf("Self-fix successful for project %s.", interactionLog.ID)
+				}
 			}
 		}
 		if err := db.InsertInteractionLog(interactionLog); err != nil {

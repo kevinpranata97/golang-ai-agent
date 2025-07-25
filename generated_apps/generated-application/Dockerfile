@@ -1,29 +1,32 @@
-# Build stage
-FROM golang:1.21-alpine AS builder
+# Use official Node.js runtime as base image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Copy go mod files
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy package files
+COPY package*.json ./
 
-# Copy source code
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o main .
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nodejs -u 1001
 
-# Final stage
-FROM alpine:latest
-
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-
-# Copy the binary from builder stage
-COPY --from=builder /app/main .
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
+USER nodejs
 
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["./main"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node healthcheck.js
+
+# Start the application
+CMD ["npm", "start"]

@@ -26,6 +26,11 @@ type InteractionLog struct {
 	FeedbackJSON           string
 	Status                 string
 	ProcessedForFinetuning bool
+	// New fields for self-fix/upgrade
+	AppliedSuggestionJSON  string `json:"applied_suggestion_json,omitempty"` // JSON of the applied suggestion
+	FixStatus              string `json:"fix_status,omitempty"` // success, failed_command, failed_complex_mod, skipped
+	FixOutput              string `json:"fix_output,omitempty"` // Output from command or modification
+	RetestResultsJSON      string `json:"retest_results_json,omitempty"` // Test results after applying fix
 }
 
 type DB struct {
@@ -70,7 +75,11 @@ func createTables(db *sql.DB) error {
 		analysis_results_json TEXT,
 		feedback_json TEXT,
 		status TEXT NOT NULL,
-		processed_for_finetuning INTEGER DEFAULT 0
+		processed_for_finetuning INTEGER DEFAULT 0,
+		applied_suggestion_json TEXT,
+		fix_status TEXT,
+		fix_output TEXT,
+		retest_results_json TEXT
 	);
 	CREATE INDEX IF NOT EXISTS idx_timestamp ON interactions_log (timestamp);
 	CREATE INDEX IF NOT EXISTS idx_endpoint ON interactions_log (endpoint);

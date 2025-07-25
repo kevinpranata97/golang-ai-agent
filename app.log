@@ -1,0 +1,11 @@
+2025/07/24 23:30:15 Database initialized at data/finetuning.db
+2025/07/24 23:30:15 Server starting on port 8080
+2025/07/24 23:30:15 Available endpoints:
+2025/07/24 23:30:15   GET  /health - Health check
+2025/07/24 23:30:15   GET  /status - Agent status
+2025/07/24 23:30:15   POST /generate-app - Generate application from description
+2025/07/24 23:30:15   POST /test-app - Test generated application
+2025/07/24 23:30:15   POST /generate-and-test - Generate and test application
+2025/07/24 23:30:15   POST /webhook - GitHub webhook
+2025/07/24 23:30:15 Running scheduled fine-tuning process...
+2025/07/24 23:30:15 Server failed to start:listen tcp 0.0.0.0:8080: bind: address already in use

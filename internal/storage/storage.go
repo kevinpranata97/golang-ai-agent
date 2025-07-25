@@ -80,7 +80,8 @@ type ImprovementSuggestion struct {
 	Description string `json:"description"`
 	Impact      string `json:"impact"`
 	Effort      string `json:"effort"`
-	Code        string `json:"code,omitempty"`
+	Code        string `json:"code,omitempty"` // Shell command or code snippet to apply
+	TargetFile  string `json:"target_file,omitempty"` // File path to apply modification
 }
 
 // Storage interface defines storage operations

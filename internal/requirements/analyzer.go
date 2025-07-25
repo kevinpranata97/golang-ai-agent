@@ -78,6 +78,7 @@ type UIPage struct {
 type RequirementAnalyzer struct {
 	geminiAPIKey string
 	httpClient   *http.Client
+	CodeAnalyzer *analysis.CodeAnalyzer // Add CodeAnalyzer here
 }
 
 // NewRequirementAnalyzer creates a new requirement analyzer
@@ -87,6 +88,7 @@ func NewRequirementAnalyzer(geminiAPIKey string) *RequirementAnalyzer {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		CodeAnalyzer: analysis.NewCodeAnalyzer(nil), // Initialize with nil storage for now, will be set in main
 	}
 }
 
