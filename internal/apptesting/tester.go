@@ -942,9 +942,57 @@ func (at *ApplicationTester) testAPIByLanguage(appPath string, appReq *requireme
 	}
 	start := time.Now()
 
-	result.Status = "skip"
-	result.Output = "API tests are skipped in this environment due to server execution limitations."
+	// Check if we can identify runnable files based on language
+	var hasRunnableApp bool
+	var appDescription string
+
+	switch language {
+	case "javascript", "node", "nodejs":
+		// Check for Node.js application files
+		if _, err := os.Stat(filepath.Join(appPath, "package.json")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Node.js application with package.json"
+		} else if _, err := os.Stat(filepath.Join(appPath, "app.js")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Node.js application with app.js"
+		} else if _, err := os.Stat(filepath.Join(appPath, "index.js")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Node.js application with index.js"
+		}
+	case "go", "golang":
+		// Check for Go application
+		if _, err := os.Stat(filepath.Join(appPath, "main.go")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Go application with main.go"
+		}
+	case "python":
+		// Check for Python application
+		if _, err := os.Stat(filepath.Join(appPath, "app.py")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Python application with app.py"
+		} else if _, err := os.Stat(filepath.Join(appPath, "main.py")); err == nil {
+			hasRunnableApp = true
+			appDescription = "Python application with main.py"
+		}
+	}
+
 	result.Duration = time.Since(start)
+
+	if !hasRunnableApp {
+		result.Status = "skip"
+		result.Output = fmt.Sprintf("No runnable application found for language: %s", language)
+		return result
+	}
+
+	// In sandbox environment, we skip actual server execution but acknowledge the app structure
+	result.Status = "skip"
+	result.Output = fmt.Sprintf("API tests skipped for %s due to sandbox limitations. Detected: %s", language, appDescription)
+	result.Details = map[string]interface{}{
+		"language": language,
+		"app_type": appDescription,
+		"reason": "sandbox_environment_limitations",
+	}
+
 	return result
 }
 
