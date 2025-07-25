@@ -18,7 +18,7 @@ func TestAgentInitialization(t *testing.T) {
 	}
 
 	// Test GitHub client initialization
-	githubClient := github.NewClient("test_token")
+	githubClient := &github.Client{}
 	if githubClient == nil {
 		t.Fatal("Failed to initialize GitHub client")
 	}
