@@ -23,7 +23,9 @@ import (
 func main() {
 	// Initialize requirement analyzer
 	geminiAPIKey := requirements.GetGeminiAPIKey()
+	storage := storage.NewFileStorage(dataDir) // Initialize storage
 	reqAnalyzer := requirements.NewRequirementAnalyzer(geminiAPIKey)
+	reqAnalyzer.CodeAnalyzer = analysis.NewCodeAnalyzer(storage) // Pass storage to CodeAnalyzer
 	
 	// Initialize code generator
 	outputDir := "./generated_apps"
