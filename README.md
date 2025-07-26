@@ -4,6 +4,7 @@ Aplikasi AI Agent yang dikembangkan menggunakan Go (Golang) ini adalah solusi ko
 
 ### Fitur Utama:
 
+-   **Self-Healing Otomatis**: Secara proaktif mengidentifikasi dan memperbaiki masalah dalam aplikasi yang dihasilkan, memastikan stabilitas dan keandalan yang berkelanjutan.
 -   **Generasi Aplikasi Berbasis AI**: Mengubah deskripsi bahasa alami menjadi kode aplikasi yang berfungsi penuh dalam berbagai bahasa (Go, Node.js/JavaScript, Python, Java, PHP, Ruby).
 -   **Dukungan Multi-Bahasa**: Agen dapat menghasilkan aplikasi dalam bahasa yang diminta (misalnya, Node.js/JavaScript) dengan struktur proyek yang lengkap, termasuk `package.json`, `app.js`, models, controllers, routes, middleware, konfigurasi database, Dockerfile, dan README.
 -   **Pengujian Komprehensif**: Melakukan unit test, integration test, static analysis, security scan, dan performance benchmark secara otomatis.
@@ -254,6 +255,20 @@ POST /generate-and-test
 #### Webhook Handler
 ```bash
 POST /webhook
+```
+
+#### Self-Heal Endpoint
+```bash
+POST /self-heal
+```
+**Description:** Attempts to self-heal a project based on provided details.
+**Request Body (JSON):**
+```json
+{
+  "project_id": "your_project_id",
+  "app_path": "/path/to/your/project",
+  "description": "Description of the issue or the desired state"
+}
 ```
 
 ## Arsitektur
