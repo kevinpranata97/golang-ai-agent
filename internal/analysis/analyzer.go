@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kevinpranata97/golang-ai-agent/internal/apptesting"
 	"github.com/kevinpranata97/golang-ai-agent/internal/requirements"
 	"github.com/kevinpranata97/golang-ai-agent/internal/storage"
 )
@@ -30,7 +29,7 @@ func NewCodeAnalyzer(storage storage.Storage) *CodeAnalyzer {
 }
 
 // AnalyzeProject performs comprehensive analysis of a generated project
-func (ca *CodeAnalyzer) AnalyzeProject(projectID, appPath string, appReq *requirements.ApplicationRequirement, testResults *apptesting.TestSuite) (*storage.AnalysisData, error) {
+func (ca *CodeAnalyzer) AnalyzeProject(projectID, appPath string, appReq *requirements.ApplicationRequirement) (*storage.AnalysisData, error) {
 	analysis := &storage.AnalysisData{
 		ProjectID: projectID,
 		Timestamp: time.Now(),
@@ -42,9 +41,8 @@ func (ca *CodeAnalyzer) AnalyzeProject(projectID, appPath string, appReq *requir
 		return nil, fmt.Errorf("failed to analyze code quality: %v", err)
 	}
 	analysis.CodeQuality = *codeQuality
-
 	// Analyze performance
-	performance, err := ca.analyzePerformance(appPath, testResults)
+	performance, err := ca.analyzePerformance(appPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze performance: %v", err)
 	}
@@ -58,7 +56,7 @@ func (ca *CodeAnalyzer) AnalyzeProject(projectID, appPath string, appReq *requir
 	analysis.Security = *security
 
 	// Generate improvement suggestions
-	suggestions := ca.generateImprovementSuggestions(analysis, appReq, testResults)
+	suggestions := ca.generateImprovementSuggestions(analysis, appReq)
 	analysis.Suggestions = suggestions
 
 	// Save analysis to storage
@@ -106,7 +104,7 @@ func (ca *CodeAnalyzer) analyzeCodeQuality(appPath string) (*storage.CodeQuality
 }
 
 // analyzePerformance analyzes performance metrics
-func (ca *CodeAnalyzer) analyzePerformance(appPath string, testResults *apptesting.TestSuite) (*storage.PerformanceMetrics, error) {
+func (ca *CodeAnalyzer) analyzePerformance(appPath string) (*storage.PerformanceMetrics, error) {
 	metrics := &storage.PerformanceMetrics{}
 
 	// Get binary size
@@ -116,14 +114,6 @@ func (ca *CodeAnalyzer) analyzePerformance(appPath string, testResults *apptesti
 	}
 
 	// Extract build time from test results
-	if testResults != nil {
-		for _, result := range testResults.Results {
-			if result.Type == "build" {
-				metrics.BuildTime = result.Duration.Seconds()
-				break
-			}
-		}
-	}
 
 	// Estimate startup time (placeholder - would need actual measurement)
 	metrics.StartupTime = 0.5 // seconds
@@ -132,15 +122,6 @@ func (ca *CodeAnalyzer) analyzePerformance(appPath string, testResults *apptesti
 	metrics.MemoryUsage = 10 * 1024 * 1024 // 10MB
 
 	// Extract response time from API tests
-	if testResults != nil {
-		for _, result := range testResults.Results {
-			if result.Type == "api" && result.Details != nil {
-				// Extract average response time from API test details
-				metrics.ResponseTime = 0.1 // seconds (placeholder)
-				break
-			}
-		}
-	}
 
 	return metrics, nil
 }
@@ -211,7 +192,7 @@ func (ca *CodeAnalyzer) analyzeSecurity(appPath string) (*storage.SecurityMetric
 }
 
 // generateImprovementSuggestions generates suggestions for improving the code
-func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.AnalysisData, appReq *requirements.ApplicationRequirement, testResults *apptesting.TestSuite) []storage.ImprovementSuggestion {
+func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.AnalysisData, appReq *requirements.ApplicationRequirement) []storage.ImprovementSuggestion {
 	var suggestions []storage.ImprovementSuggestion
 
 	// Code quality suggestions
@@ -289,20 +270,6 @@ func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.Analysi
 		})
 	}
 
-	// Functionality suggestions based on test results
-	if testResults != nil {
-		for _, result := range testResults.Results {
-			if result.Status == "fail" {
-				suggestions = append(suggestions, storage.ImprovementSuggestion{
-					Type:        "functionality",
-					Priority:    "high",
-					Description: fmt.Sprintf("Test failure in %s: %s", result.Name, result.Error),
-					Impact:      "Fixed functionality and improved re					Effort:      "medium",
-					TargetFile:  "main.go", // Example target file
-					Code:        "// Old code:::// New code", // Example modification format OLD_CODE:::NEW_CODE
-				})
-			}
-		}
 
 		// Framework-specific suggestions
 		if appReq != nil {
@@ -338,11 +305,11 @@ func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.Analysi
 			Impact:      "Improved flexibility and security",
 			Effort:      "low",
 			TargetFile:  "main.go",
-			Code:        "8080:::os.Getenv(\"PORT\")",
+			Code:        `8080:os.Getenv("PORT")`,
 		})
 
 		return suggestions
-	} methods for analysis
+}
 
 // countLinesOfCode counts non-empty, non-comment lines of code
 func (ca *CodeAnalyzer) countLinesOfCode(appPath string) (int, error) {
@@ -374,6 +341,9 @@ func (ca *CodeAnalyzer) countLinesOfCode(appPath string) (int, error) {
 
 	return totalLines, err
 }
+
+
+
 
 // calculateCyclomaticComplexity calculates cyclomatic complexity
 func (ca *CodeAnalyzer) calculateCyclomaticComplexity(appPath string) (int, error) {
@@ -408,10 +378,13 @@ func (ca *CodeAnalyzer) calculateCyclomaticComplexity(appPath string) (int, erro
 	return totalComplexity, err
 }
 
+
+
+
 // calculateDuplication calculates code duplication ratio
 func (ca *CodeAnalyzer) calculateDuplication(appPath string) (float64, error) {
 	// This is a simplified implementation
-	// In a real system, you'd use more sophisticated algorithms
+	// In a real system, you\'d use more sophisticated algorithms
 	
 	var allLines []string
 	lineCount := make(map[string]int)
@@ -459,6 +432,9 @@ func (ca *CodeAnalyzer) calculateDuplication(appPath string) (float64, error) {
 	return float64(duplicatedLines) / float64(len(allLines)), nil
 }
 
+
+
+
 // assessTechnicalDebt assesses technical debt level
 func (ca *CodeAnalyzer) assessTechnicalDebt(metrics *storage.CodeQualityMetrics) string {
 	score := 0
@@ -499,6 +475,9 @@ func (ca *CodeAnalyzer) assessTechnicalDebt(metrics *storage.CodeQualityMetrics)
 	}
 }
 
+
+
+
 // assessMaintainability assesses code maintainability
 func (ca *CodeAnalyzer) assessMaintainability(metrics *storage.CodeQualityMetrics) string {
 	score := 100
@@ -528,74 +507,45 @@ func (ca *CodeAnalyzer) assessMaintainability(metrics *storage.CodeQualityMetric
 	}
 }
 
-// Security analysis helper methods
 
-func (ca *CodeAnalyzer) hasSQLInjectionRisk(content string) bool {
-	// Look for string concatenation in SQL queries
-	patterns := []string{
-		`db\.Exec\([^)]*\+`,
-		`db\.Query\([^)]*\+`,
-		`fmt\.Sprintf.*SELECT`,
-		`fmt\.Sprintf.*INSERT`,
-		`fmt\.Sprintf.*UPDATE`,
-		`fmt\.Sprintf.*DELETE`,
-	}
 
-	for _, pattern := range patterns {
-		if matched, _ := regexp.MatchString(pattern, content); matched {
-			return true
-		}
-	}
 
-	return false
+// hasSQLInjectionRisk checks for potential SQL injection vulnerabilities
+func (ca *CodeAnalyzer) hasSQLInjectionRisk(code string) bool {
+	// Simplified check: look for common SQL keywords combined with string concatenation
+	// In a real scenario, this would involve AST analysis or dedicated security scanners
+	matched, _ := regexp.MatchString(`("|')\s*\+\s*(.+)(\s*\+\s*("|'))?.*(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)`, code)
+	return matched
 }
 
-func (ca *CodeAnalyzer) hasHardcodedSecrets(content string) bool {
-	patterns := []string{
-		`(?i)password\s*[:=]\s*["'][^"']{8,}["']`,
-		`(?i)api[_-]?key\s*[:=]\s*["'][^"']{10,}["']`,
-		`(?i)secret[_-]?key\s*[:=]\s*["'][^"']{10,}["']`,
-		`(?i)token\s*[:=]\s*["'][^"']{10,}["']`,
-	}
 
-	for _, pattern := range patterns {
-		if matched, _ := regexp.MatchString(pattern, content); matched {
-			return true
-		}
-	}
 
-	return false
+
+// hasHardcodedSecrets checks for hardcoded secrets
+func (ca *CodeAnalyzer) hasHardcodedSecrets(code string) bool {
+	// Simplified check: look for common secret patterns
+	// In a real scenario, this would involve more robust pattern matching and entropy analysis
+	matched, _ := regexp.MatchString(`(password|secret|api_key|token|private_key)(\s*=\s*|:\s*)("|')([a-zA-Z0-9_\-!@#$%^&*()]{10,})("|')`, code)
+	return matched
 }
 
-func (ca *CodeAnalyzer) hasInsecureHTTP(content string) bool {
-	patterns := []string{
-		`http://`,
-		`InsecureSkipVerify:\s*true`,
-	}
 
-	for _, pattern := range patterns {
-		if matched, _ := regexp.MatchString(pattern, content); matched {
-			return true
-		}
-	}
 
-	return false
+
+// hasInsecureHTTP checks for insecure HTTP usage
+func (ca *CodeAnalyzer) hasInsecureHTTP(code string) bool {
+	matched, _ := regexp.MatchString(`http://`, code)
+	return matched
 }
 
-func (ca *CodeAnalyzer) hasWeakCryptography(content string) bool {
-	patterns := []string{
-		`md5\.`,
-		`sha1\.`,
-		`des\.`,
-		`rc4\.`,
-	}
 
-	for _, pattern := range patterns {
-		if matched, _ := regexp.MatchString(pattern, content); matched {
-			return true
-		}
-	}
 
-	return false
+
+// hasWeakCryptography checks for weak cryptography usage
+func (ca *CodeAnalyzer) hasWeakCryptography(code string) bool {
+	// Simplified check: look for common weak crypto algorithms or practices
+	matched, _ := regexp.MatchString(`(MD5|SHA1|DES|RC4|ECB)`, code)
+	return matched
 }
+
 
