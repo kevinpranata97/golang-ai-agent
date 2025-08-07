@@ -23,7 +23,7 @@ import (
 
 func main() {
 	dataDir := "./data"
-	
+
 	// Initialize storage
 	fileStorage := storage.NewFileStorage(dataDir)
 
@@ -50,7 +50,6 @@ func main() {
 
 	// Initialize Finetuner
 	finetuner := finetuning.NewFinetuner(db)
-
 
 	// Schedule periodic fine-tuning process
 	go func() {
@@ -108,11 +107,11 @@ func main() {
 		}
 
 		interactionLog := database.InteractionLog{
-			ID:            uuid.New().String(),
-			Timestamp:     time.Now(),
-			Endpoint:      "/generate-app",
-			RequestPayload:  string(request.Description),
-			Status:        "success", // Default to success, update on error
+			ID:             uuid.New().String(),
+			Timestamp:      time.Now(),
+			Endpoint:       "/generate-app",
+			RequestPayload: string(request.Description),
+			Status:         "success", // Default to success, update on error
 		}
 
 		// Analyze requirements
@@ -149,13 +148,13 @@ func main() {
 			"success": true,
 			"message": "Application generated successfully",
 			"app": map[string]interface{}{
-				"name":        appReq.Name,
-				"type":        appReq.Type,
-				"language":    appReq.Language,
-				"framework":   appReq.Framework,
-				"entities":    len(appReq.Entities),
-				"endpoints":   len(appReq.Endpoints),
-				"output_dir":  filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-"))),
+				"name":       appReq.Name,
+				"type":       appReq.Type,
+				"language":   appReq.Language,
+				"framework":  appReq.Framework,
+				"entities":   len(appReq.Entities),
+				"endpoints":  len(appReq.Endpoints),
+				"output_dir": filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-"))),
 			},
 		})
 		w.Write(jsonResponse)
@@ -190,12 +189,12 @@ func main() {
 		}
 
 		interactionLog := database.InteractionLog{
-			ID:            uuid.New().String(),
-			Timestamp:     time.Now(),
-			Endpoint:      "/test-app",
-			RequestPayload:  string(request.AppPath),
-			AppPath:       request.AppPath,
-			Status:        "success", // Default to success, update on error
+			ID:             uuid.New().String(),
+			Timestamp:      time.Now(),
+			Endpoint:       "/test-app",
+			RequestPayload: string(request.AppPath),
+			AppPath:        request.AppPath,
+			Status:         "success", // Default to success, update on error
 		}
 
 		// Check if app path exists
@@ -247,11 +246,11 @@ func main() {
 		}
 
 		interactionLog := database.InteractionLog{
-			ID:            uuid.New().String(),
-			Timestamp:     time.Now(),
-			Endpoint:      "/generate-and-test",
-			RequestPayload:  string(request.Description),
-			Status:        "success", // Default to success, update on error
+			ID:             uuid.New().String(),
+			Timestamp:      time.Now(),
+			Endpoint:       "/generate-and-test",
+			RequestPayload: string(request.Description),
+			Status:         "success", // Default to success, update on error
 		}
 
 		// Analyze requirements
@@ -290,13 +289,13 @@ func main() {
 			"success": true,
 			"message": "Application generated and tested successfully",
 			"app": map[string]interface{}{
-				"name":        appReq.Name,
-				"type":        appReq.Type,
-				"language":    appReq.Language,
-				"framework":   appReq.Framework,
-				"entities":    len(appReq.Entities),
-				"endpoints":   len(appReq.Endpoints),
-				"output_dir":  appPath,
+				"name":       appReq.Name,
+				"type":       appReq.Type,
+				"language":   appReq.Language,
+				"framework":  appReq.Framework,
+				"entities":   len(appReq.Entities),
+				"endpoints":  len(appReq.Endpoints),
+				"output_dir": appPath,
 			},
 		}
 
@@ -330,8 +329,8 @@ func main() {
 		}
 
 		var request struct {
-			ProjectID string `json:"project_id"`
-			AppPath   string `json:"app_path"`
+			ProjectID   string `json:"project_id"`
+			AppPath     string `json:"app_path"`
 			Description string `json:"description"`
 		}
 
@@ -379,10 +378,8 @@ func main() {
 	log.Printf("  POST /generate-and-test - Generate and test application")
 	log.Printf("  POST /webhook - GitHub webhook")
 	log.Printf("  POST /self-heal - Attempt self-healing for a project")
-	
+
 	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
 }
-
-

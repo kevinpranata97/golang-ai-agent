@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 )
 
 const dbFileName = "finetuning.db"
@@ -27,10 +27,10 @@ type InteractionLog struct {
 	Status                 string
 	ProcessedForFinetuning bool
 	// New fields for self-fix/upgrade
-	AppliedSuggestionJSON  string `json:"applied_suggestion_json,omitempty"` // JSON of the applied suggestion
-	FixStatus              string `json:"fix_status,omitempty"` // success, failed_command, failed_complex_mod, skipped
-	FixOutput              string `json:"fix_output,omitempty"` // Output from command or modification
-	RetestResultsJSON      string `json:"retest_results_json,omitempty"` // Test results after applying fix
+	AppliedSuggestionJSON string `json:"applied_suggestion_json,omitempty"` // JSON of the applied suggestion
+	FixStatus             string `json:"fix_status,omitempty"`              // success, failed_command, failed_complex_mod, skipped
+	FixOutput             string `json:"fix_output,omitempty"`              // Output from command or modification
+	RetestResultsJSON     string `json:"retest_results_json,omitempty"`     // Test results after applying fix
 }
 
 type DB struct {
@@ -189,5 +189,3 @@ func (d *DB) MarkLogsAsProcessed(ids []string) error {
 	_, err = stmt.Exec(args...)
 	return err
 }
-
-

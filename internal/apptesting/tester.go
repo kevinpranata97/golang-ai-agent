@@ -19,31 +19,31 @@ import (
 
 // TestResult represents the result of a test
 type TestResult struct {
-	Name        string        `json:"name"`
-	Type        string        `json:"type"` // unit, integration, build, api
-	Status      string        `json:"status"` // pass, fail, skip
-	Duration    time.Duration `json:"duration"`
-	Output      string        `json:"output"`
-	Error       string        `json:"error,omitempty"`
-	Coverage    float64       `json:"coverage,omitempty"`
-	Details     interface{}   `json:"details,omitempty"`
+	Name     string        `json:"name"`
+	Type     string        `json:"type"`   // unit, integration, build, api
+	Status   string        `json:"status"` // pass, fail, skip
+	Duration time.Duration `json:"duration"`
+	Output   string        `json:"output"`
+	Error    string        `json:"error,omitempty"`
+	Coverage float64       `json:"coverage,omitempty"`
+	Details  interface{}   `json:"details,omitempty"`
 }
 
 // TestSuite represents a collection of test results
 type TestSuite struct {
-	Name         string       `json:"name"`
-	AppPath      string       `json:"app_path"`
-	StartTime    time.Time    `json:"start_time"`
-	EndTime      time.Time    `json:"end_time"`
-	Duration     time.Duration `json:"duration"`
-	TotalTests   int          `json:"total_tests"`
-	PassedTests  int          `json:"passed_tests"`
-	FailedTests  int          `json:"failed_tests"`
-	SkippedTests int          `json:"skipped_tests"`
-	Coverage     float64      `json:"coverage"`
-	Results      []TestResult `json:"results"`
-	Summary      string       `json:"summary"`
-	OverallStatus string       `json:"overall_status"` // Added field
+	Name          string        `json:"name"`
+	AppPath       string        `json:"app_path"`
+	StartTime     time.Time     `json:"start_time"`
+	EndTime       time.Time     `json:"end_time"`
+	Duration      time.Duration `json:"duration"`
+	TotalTests    int           `json:"total_tests"`
+	PassedTests   int           `json:"passed_tests"`
+	FailedTests   int           `json:"failed_tests"`
+	SkippedTests  int           `json:"skipped_tests"`
+	Coverage      float64       `json:"coverage"`
+	Results       []TestResult  `json:"results"`
+	Summary       string        `json:"summary"`
+	OverallStatus string        `json:"overall_status"` // Added field
 }
 
 // ApplicationTester handles testing of generated applications
@@ -272,7 +272,7 @@ func (at *ApplicationTester) testAPI(appPath string, appReq *requirements.Applic
 	startTime := time.Now()
 
 	// Start the application
-	cmd := exec.Command("./"+filepath.Base(appPath))
+	cmd := exec.Command("./" + filepath.Base(appPath))
 	cmd.Dir = appPath
 	cmd.Env = append(os.Environ(), "PORT=8081") // Use different port for testing
 
@@ -309,10 +309,10 @@ func (at *ApplicationTester) testAPI(appPath string, appReq *requirements.Applic
 	// Test each API endpoint
 	for _, endpoint := range appReq.Endpoints {
 		url := "http://localhost:8081" + endpoint.Path
-		
+
 		// Replace path parameters with test values
 		url = strings.ReplaceAll(url, "{id}", "1")
-		
+
 		var body []byte
 		if endpoint.Method == "POST" || endpoint.Method == "PUT" {
 			// Create test data based on the first entity
@@ -457,10 +457,10 @@ func (at *ApplicationTester) extractCoverage(output string) float64 {
 // testEndpoint tests a single API endpoint
 func (at *ApplicationTester) testEndpoint(method, url string, body []byte) map[string]interface{} {
 	client := &http.Client{Timeout: 10 * time.Second}
-	
+
 	var req *http.Request
 	var err error
-	
+
 	if body != nil {
 		req, err = http.NewRequest(method, url, bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
@@ -496,12 +496,12 @@ func (at *ApplicationTester) testEndpoint(method, url string, body []byte) map[s
 // generateTestData generates test data for an entity
 func (at *ApplicationTester) generateTestData(entity requirements.Entity) map[string]interface{} {
 	data := make(map[string]interface{})
-	
+
 	for _, field := range entity.Fields {
 		if field.Name == "id" || field.Name == "created_at" {
 			continue // Skip auto-generated fields
 		}
-		
+
 		switch field.Type {
 		case "string":
 			data[field.Name] = "test_" + field.Name
@@ -517,106 +517,106 @@ func (at *ApplicationTester) generateTestData(entity requirements.Entity) map[st
 			data[field.Name] = "test_value"
 		}
 	}
-	
+
 	return data
 }
 
 // scanForSecurityIssues scans code for common security issues
 func (at *ApplicationTester) scanForSecurityIssues(appPath string) []string {
 	var issues []string
-	
+
 	// This is a basic implementation - in a real system, you'd use tools like gosec
 	err := filepath.Walk(appPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if strings.HasSuffix(info.Name(), ".go") {
 			content, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
-			
+
 			contentStr := string(content)
-			
+
 			// Check for SQL injection vulnerabilities
 			if strings.Contains(contentStr, "db.Exec(") && strings.Contains(contentStr, "+") {
 				issues = append(issues, fmt.Sprintf("Potential SQL injection in %s", path))
 			}
-			
+
 			// Check for hardcoded passwords
 			if regexp.MustCompile(`password\s*[:=]\s*[""][^"\]+[""]`).MatchString(strings.ToLower(contentStr)) {
 				issues = append(issues, fmt.Sprintf("Potential hardcoded password in %s", path))
 			}
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		issues = append(issues, "Error scanning for security issues: "+err.Error())
 	}
-	
+
 	return issues
 }
 
 // scanForHardcodedSecrets scans for hardcoded secrets
 func (at *ApplicationTester) scanForHardcodedSecrets(appPath string) []string {
 	var secrets []string
-	
+
 	patterns := []*regexp.Regexp{
 		regexp.MustCompile(`(?i)api[_-]?key\s*[:=]\s*[""][^"\]{10,}[""]`),
 		regexp.MustCompile(`(?i)secret[_-]?key\s*[:=]\s*[""][^"\]{10,}[""]`),
 		regexp.MustCompile(`(?i)token\s*[:=]\s*[""][^"\]{10,}[""]`),
 		regexp.MustCompile(`(?i)password\s*[:=]\s*[""][^"\]{8,}[""]`),
 	}
-	
+
 	err := filepath.Walk(appPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if strings.HasSuffix(info.Name(), ".go") {
 			content, err := os.ReadFile(path)
 			if err != nil {
 				return err
 			}
-			
+
 			contentStr := string(content)
-			
+
 			for _, pattern := range patterns {
 				if pattern.MatchString(contentStr) {
 					secrets = append(secrets, fmt.Sprintf("Potential hardcoded secret in %s", path))
 				}
 			}
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		secrets = append(secrets, "Error scanning for secrets: "+err.Error())
 	}
-	
+
 	return secrets
 }
 
 // countLinesOfCode counts lines of code in the project
 func (at *ApplicationTester) countLinesOfCode(appPath string) (int, error) {
 	totalLines := 0
-	
+
 	err := filepath.Walk(appPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if strings.HasSuffix(info.Name(), ".go") {
 			file, err := os.Open(path)
 			if err != nil {
 				return err
 			}
 			defer file.Close()
-			
+
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
 				line := strings.TrimSpace(scanner.Text())
@@ -624,19 +624,19 @@ func (at *ApplicationTester) countLinesOfCode(appPath string) (int, error) {
 					totalLines++
 				}
 			}
-			
+
 			if err := scanner.Err(); err != nil {
 				return err
 			}
 		}
-		
+
 		return nil
 	})
-	
+
 	if err != nil {
 		return 0, err
 	}
-	
+
 	return totalLines, nil
 }
 
@@ -644,7 +644,7 @@ func (at *ApplicationTester) countLinesOfCode(appPath string) (int, error) {
 func (at *ApplicationTester) generateSummary(suite *TestSuite) string {
 	var summary strings.Builder
 	summary.WriteString(fmt.Sprintf("Test Suite: %s\n", suite.Name))
-	summary.WriteString(fmt.Sprintf("Total Tests: %d, Passed: %d, Failed: %d, Skipped: %d\n", 
+	summary.WriteString(fmt.Sprintf("Total Tests: %d, Passed: %d, Failed: %d, Skipped: %d\n",
 		suite.TotalTests, suite.PassedTests, suite.FailedTests, suite.SkippedTests))
 	summary.WriteString(fmt.Sprintf("Duration: %s\n", suite.Duration.Round(time.Millisecond)))
 	if suite.Coverage > 0 {
@@ -661,20 +661,15 @@ func (at *ApplicationTester) generateSummary(suite *TestSuite) string {
 	return summary.String()
 }
 
-
-
 // SaveTestResults saves test results to a file
 func (at *ApplicationTester) SaveTestResults(suite *TestSuite, outputPath string) error {
 	data, err := json.MarshalIndent(suite, "", "  ")
 	if err != nil {
 		return err
 	}
-	
+
 	return os.WriteFile(outputPath, data, 0644)
 }
-
-
-
 
 // detectApplicationLanguage detects the programming language of the generated application
 func (at *ApplicationTester) detectApplicationLanguage(appPath string, appReq *requirements.ApplicationRequirement) string {
@@ -845,7 +840,7 @@ func (at *ApplicationTester) testStaticAnalysisByLanguage(appPath string, appReq
 		cmd.Dir = appPath
 		output, err := cmd.CombinedOutput()
 		outputs = append(outputs, fmt.Sprintf("%s: %s", strings.Join(cmdArgs, " "), string(output)))
-		
+
 		if err != nil {
 			allPassed = false
 			errors = append(errors, fmt.Sprintf("%s: %s", strings.Join(cmdArgs, " "), err.Error()))
@@ -990,7 +985,7 @@ func (at *ApplicationTester) testAPIByLanguage(appPath string, appReq *requireme
 	result.Details = map[string]interface{}{
 		"language": language,
 		"app_type": appDescription,
-		"reason": "sandbox_environment_limitations",
+		"reason":   "sandbox_environment_limitations",
 	}
 
 	return result
@@ -1039,7 +1034,7 @@ func (at *ApplicationTester) testSecurityByLanguage(appPath string, appReq *requ
 		cmd.Dir = appPath
 		output, err := cmd.CombinedOutput()
 		outputs = append(outputs, fmt.Sprintf("%s: %s", strings.Join(cmdArgs, " "), string(output)))
-		
+
 		if err != nil {
 			// For security tools, some "errors" might be warnings, so we're more lenient
 			errors = append(errors, fmt.Sprintf("%s: %s", strings.Join(cmdArgs, " "), err.Error()))
@@ -1094,11 +1089,10 @@ func (at *ApplicationTester) testPerformanceByLanguage(appPath string, appReq *r
 		result.Output = fmt.Sprintf("Project size: %d bytes, Files: %d", totalSize, fileCount)
 		result.Details = map[string]interface{}{
 			"total_size_bytes": totalSize,
-			"file_count": fileCount,
-			"language": language,
+			"file_count":       fileCount,
+			"language":         language,
 		}
 	}
 
 	return result
 }
-

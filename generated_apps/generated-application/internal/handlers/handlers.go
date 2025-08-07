@@ -3,8 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"database/sql"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
@@ -30,5 +30,3 @@ func (h *Handler) UpdateTask(c *gin.Context) {
 func (h *Handler) DeleteTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Delete task endpoint"})
 }
-
-

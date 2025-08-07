@@ -14,73 +14,73 @@ import (
 
 // ProjectData represents stored project data
 type ProjectData struct {
-	ID           string                              `json:"id"`
-	Name         string                              `json:"name"`
-	Description  string                              `json:"description"`
+	ID           string                               `json:"id"`
+	Name         string                               `json:"name"`
+	Description  string                               `json:"description"`
 	Requirements *requirements.ApplicationRequirement `json:"requirements"`
-	GeneratedAt  time.Time                           `json:"generated_at"`
-	AppPath      string                              `json:"app_path"`
-	TestResults  *apptesting.TestSuite               `json:"test_results,omitempty"`
-	Status       string                              `json:"status"` // generating, testing, completed, failed
-	Iterations   []IterationData                     `json:"iterations"`
-	Metadata     map[string]interface{}              `json:"metadata"`
+	GeneratedAt  time.Time                            `json:"generated_at"`
+	AppPath      string                               `json:"app_path"`
+	TestResults  *apptesting.TestSuite                `json:"test_results,omitempty"`
+	Status       string                               `json:"status"` // generating, testing, completed, failed
+	Iterations   []IterationData                      `json:"iterations"`
+	Metadata     map[string]interface{}               `json:"metadata"`
 }
 
 // IterationData represents data for each iteration/improvement
 type IterationData struct {
-	ID          string                    `json:"id"`
-	Timestamp   time.Time                 `json:"timestamp"`
-	Changes     []string                  `json:"changes"`
-	TestResults *apptesting.TestSuite     `json:"test_results,omitempty"`
-	Improvements []string                 `json:"improvements"`
-	Status      string                    `json:"status"`
+	ID           string                `json:"id"`
+	Timestamp    time.Time             `json:"timestamp"`
+	Changes      []string              `json:"changes"`
+	TestResults  *apptesting.TestSuite `json:"test_results,omitempty"`
+	Improvements []string              `json:"improvements"`
+	Status       string                `json:"status"`
 }
 
 // AnalysisData represents analysis results
 type AnalysisData struct {
-	ProjectID     string                 `json:"project_id"`
-	Timestamp     time.Time              `json:"timestamp"`
-	CodeQuality   CodeQualityMetrics     `json:"code_quality"`
-	Performance   PerformanceMetrics     `json:"performance"`
-	Security      SecurityMetrics        `json:"security"`
-	Suggestions   []ImprovementSuggestion `json:"suggestions"`
+	ProjectID   string                  `json:"project_id"`
+	Timestamp   time.Time               `json:"timestamp"`
+	CodeQuality CodeQualityMetrics      `json:"code_quality"`
+	Performance PerformanceMetrics      `json:"performance"`
+	Security    SecurityMetrics         `json:"security"`
+	Suggestions []ImprovementSuggestion `json:"suggestions"`
 }
 
 // CodeQualityMetrics represents code quality metrics
 type CodeQualityMetrics struct {
-	LinesOfCode       int     `json:"lines_of_code"`
-	CyclomaticComplexity int  `json:"cyclomatic_complexity"`
-	TestCoverage      float64 `json:"test_coverage"`
-	DuplicationRatio  float64 `json:"duplication_ratio"`
-	TechnicalDebt     string  `json:"technical_debt"`
-	Maintainability   string  `json:"maintainability"`
+	LinesOfCode          int     `json:"lines_of_code"`
+	CyclomaticComplexity int     `json:"cyclomatic_complexity"`
+	TestCoverage         float64 `json:"test_coverage"`
+	DuplicationRatio     float64 `json:"duplication_ratio"`
+	TechnicalDebt        string  `json:"technical_debt"`
+	Maintainability      string  `json:"maintainability"`
 }
 
 // PerformanceMetrics represents performance metrics
 type PerformanceMetrics struct {
-	BinarySize       int64   `json:"binary_size"`
-	BuildTime        float64 `json:"build_time"`
-	StartupTime      float64 `json:"startup_time"`
-	MemoryUsage      int64   `json:"memory_usage"`
-	ResponseTime     float64 `json:"response_time"`
+	BinarySize   int64   `json:"binary_size"`
+	BuildTime    float64 `json:"build_time"`
+	StartupTime  float64 `json:"startup_time"`
+	MemoryUsage  int64   `json:"memory_usage"`
+	ResponseTime float64 `json:"response_time"`
 }
 
 // SecurityMetrics represents security metrics
 type SecurityMetrics struct {
-	Vulnerabilities   int      `json:"vulnerabilities"`
-	SecurityScore     float64  `json:"security_score"`
-	HardcodedSecrets  int      `json:"hardcoded_secrets"`
-	SecurityIssues    []string `json:"security_issues"`
+	Vulnerabilities  int      `json:"vulnerabilities"`
+	SecurityScore    float64  `json:"security_score"`
+	HardcodedSecrets int      `json:"hardcoded_secrets"`
+	SecurityIssues   []string `json:"security_issues"`
 }
 
 // ImprovementSuggestion represents a suggestion for improvement
 type ImprovementSuggestion struct {
-	Type        string `json:"type"` // performance, security, quality, functionality
+	Type        string `json:"type"`     // performance, security, quality, functionality
 	Priority    string `json:"priority"` // high, medium, low
 	Description string `json:"description"`
 	Impact      string `json:"impact"`
 	Effort      string `json:"effort"`
-	Code        string `json:"code,omitempty"` // Shell command or code snippet to apply
+	Code        string `json:"code,omitempty"`        // Shell command or code snippet to apply
 	TargetFile  string `json:"target_file,omitempty"` // File path to apply modification
 }
 
@@ -104,14 +104,14 @@ type Storage interface {
 
 // ProjectStats represents overall project statistics
 type ProjectStats struct {
-	TotalProjects     int                    `json:"total_projects"`
-	CompletedProjects int                    `json:"completed_projects"`
-	FailedProjects    int                    `json:"failed_projects"`
-	AvgTestCoverage   float64                `json:"avg_test_coverage"`
-	AvgBuildTime      float64                `json:"avg_build_time"`
-	PopularLanguages  map[string]int         `json:"popular_languages"`
-	PopularFrameworks map[string]int         `json:"popular_frameworks"`
-	RecentActivity    []ProjectData          `json:"recent_activity"`
+	TotalProjects     int            `json:"total_projects"`
+	CompletedProjects int            `json:"completed_projects"`
+	FailedProjects    int            `json:"failed_projects"`
+	AvgTestCoverage   float64        `json:"avg_test_coverage"`
+	AvgBuildTime      float64        `json:"avg_build_time"`
+	PopularLanguages  map[string]int `json:"popular_languages"`
+	PopularFrameworks map[string]int `json:"popular_frameworks"`
+	RecentActivity    []ProjectData  `json:"recent_activity"`
 }
 
 // FileStorage implements Storage interface using file system
@@ -392,7 +392,7 @@ func (fs *FileStorage) GetProjectStats() (*ProjectStats, error) {
 				totalCoverage += project.TestResults.Coverage
 				coverageCount++
 			}
-			
+
 			totalBuildTime += project.TestResults.Duration.Seconds()
 			buildTimeCount++
 		}
@@ -460,5 +460,3 @@ func (fs *FileStorage) Cleanup(olderThan time.Duration) error {
 
 	return nil
 }
-
-

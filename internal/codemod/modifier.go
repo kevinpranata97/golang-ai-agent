@@ -43,5 +43,3 @@ func (cm *CodeModifier) ApplyModification(appPath, targetFile, modification stri
 
 	return nil
 }
-
-

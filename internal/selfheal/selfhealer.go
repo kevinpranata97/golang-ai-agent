@@ -1,26 +1,27 @@
 package selfheal
+
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os/exec"
-	"time"
 	"github.com/kevinpranata97/golang-ai-agent/internal/analysis"
 	"github.com/kevinpranata97/golang-ai-agent/internal/codemod"
 	"github.com/kevinpranata97/golang-ai-agent/internal/database"
 	"github.com/kevinpranata97/golang-ai-agent/internal/requirements"
-
+	"log"
+	"os/exec"
+	"time"
 )
 
 type SelfHealer struct {
-	analyzer *analysis.CodeAnalyzer
-	db *database.DB
+	analyzer     *analysis.CodeAnalyzer
+	db           *database.DB
 	codeModifier *codemod.CodeModifier
 }
+
 func NewSelfHealer(analyzer *analysis.CodeAnalyzer, db *database.DB) *SelfHealer {
 	return &SelfHealer{
-		analyzer: analyzer,
-		db: db,
+		analyzer:     analyzer,
+		db:           db,
 		codeModifier: codemod.NewCodeModifier(),
 	}
 }
@@ -91,5 +92,5 @@ func (sh *SelfHealer) AttemptSelfFix(projectID, appPath string, appReq *requirem
 	log.Printf("Self-fix attempts completed for project %s. Project still has issues.", projectID)
 	return fmt.Errorf("self-fix attempts failed to resolve all issues for project %s", projectID)
 }
-// PerformUpgrade mencoba melakukan upgrade pada aplikasi berdasarkan hasil analisis.
 
+// PerformUpgrade mencoba melakukan upgrade pada aplikasi berdasarkan hasil analisis.

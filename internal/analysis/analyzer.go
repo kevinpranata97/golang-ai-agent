@@ -270,45 +270,44 @@ func (ca *CodeAnalyzer) generateImprovementSuggestions(analysis *storage.Analysi
 		})
 	}
 
-
-		// Framework-specific suggestions
-		if appReq != nil {
-			switch appReq.Framework {
-			case "gin":
-				suggestions = append(suggestions, storage.ImprovementSuggestion{
-					Type:        "functionality",
-					Priority:    "low",
-					Description: "Consider adding middleware for logging, rate limiting, and request validation.",
-					Impact:      "Better observability and security",
-					Effort:      "low",
-				})
-			}
-
-			// Database-specific suggestions
-			switch appReq.Database {
-			case "sqlite":
-				suggestions = append(suggestions, storage.ImprovementSuggestion{
-					Type:        "performance",
-					Priority:    "medium",
-					Description: "Consider migrating to PostgreSQL or MySQL for production use.",
-					Impact:      "Better performance and scalability",
-					Effort:      "high",
-				})
-			}
+	// Framework-specific suggestions
+	if appReq != nil {
+		switch appReq.Framework {
+		case "gin":
+			suggestions = append(suggestions, storage.ImprovementSuggestion{
+				Type:        "functionality",
+				Priority:    "low",
+				Description: "Consider adding middleware for logging, rate limiting, and request validation.",
+				Impact:      "Better observability and security",
+				Effort:      "low",
+			})
 		}
 
-		// Example of a suggestion that requires code modification
-		suggestions = append(suggestions, storage.ImprovementSuggestion{
-			Type:        "quality",
-			Priority:    "low",
-			Description: "Replace hardcoded port with environment variable.",
-			Impact:      "Improved flexibility and security",
-			Effort:      "low",
-			TargetFile:  "main.go",
-			Code:        `8080:os.Getenv("PORT")`,
-		})
+		// Database-specific suggestions
+		switch appReq.Database {
+		case "sqlite":
+			suggestions = append(suggestions, storage.ImprovementSuggestion{
+				Type:        "performance",
+				Priority:    "medium",
+				Description: "Consider migrating to PostgreSQL or MySQL for production use.",
+				Impact:      "Better performance and scalability",
+				Effort:      "high",
+			})
+		}
+	}
 
-		return suggestions
+	// Example of a suggestion that requires code modification
+	suggestions = append(suggestions, storage.ImprovementSuggestion{
+		Type:        "quality",
+		Priority:    "low",
+		Description: "Replace hardcoded port with environment variable.",
+		Impact:      "Improved flexibility and security",
+		Effort:      "low",
+		TargetFile:  "main.go",
+		Code:        `8080:os.Getenv("PORT")`,
+	})
+
+	return suggestions
 }
 
 // countLinesOfCode counts non-empty, non-comment lines of code
@@ -341,9 +340,6 @@ func (ca *CodeAnalyzer) countLinesOfCode(appPath string) (int, error) {
 
 	return totalLines, err
 }
-
-
-
 
 // calculateCyclomaticComplexity calculates cyclomatic complexity
 func (ca *CodeAnalyzer) calculateCyclomaticComplexity(appPath string) (int, error) {
@@ -378,14 +374,11 @@ func (ca *CodeAnalyzer) calculateCyclomaticComplexity(appPath string) (int, erro
 	return totalComplexity, err
 }
 
-
-
-
 // calculateDuplication calculates code duplication ratio
 func (ca *CodeAnalyzer) calculateDuplication(appPath string) (float64, error) {
 	// This is a simplified implementation
 	// In a real system, you\'d use more sophisticated algorithms
-	
+
 	var allLines []string
 	lineCount := make(map[string]int)
 
@@ -432,9 +425,6 @@ func (ca *CodeAnalyzer) calculateDuplication(appPath string) (float64, error) {
 	return float64(duplicatedLines) / float64(len(allLines)), nil
 }
 
-
-
-
 // assessTechnicalDebt assesses technical debt level
 func (ca *CodeAnalyzer) assessTechnicalDebt(metrics *storage.CodeQualityMetrics) string {
 	score := 0
@@ -475,9 +465,6 @@ func (ca *CodeAnalyzer) assessTechnicalDebt(metrics *storage.CodeQualityMetrics)
 	}
 }
 
-
-
-
 // assessMaintainability assesses code maintainability
 func (ca *CodeAnalyzer) assessMaintainability(metrics *storage.CodeQualityMetrics) string {
 	score := 100
@@ -507,9 +494,6 @@ func (ca *CodeAnalyzer) assessMaintainability(metrics *storage.CodeQualityMetric
 	}
 }
 
-
-
-
 // hasSQLInjectionRisk checks for potential SQL injection vulnerabilities
 func (ca *CodeAnalyzer) hasSQLInjectionRisk(code string) bool {
 	// Simplified check: look for common SQL keywords combined with string concatenation
@@ -517,9 +501,6 @@ func (ca *CodeAnalyzer) hasSQLInjectionRisk(code string) bool {
 	matched, _ := regexp.MatchString(`("|')\s*\+\s*(.+)(\s*\+\s*("|'))?.*(SELECT|INSERT|UPDATE|DELETE|FROM|WHERE)`, code)
 	return matched
 }
-
-
-
 
 // hasHardcodedSecrets checks for hardcoded secrets
 func (ca *CodeAnalyzer) hasHardcodedSecrets(code string) bool {
@@ -529,17 +510,11 @@ func (ca *CodeAnalyzer) hasHardcodedSecrets(code string) bool {
 	return matched
 }
 
-
-
-
 // hasInsecureHTTP checks for insecure HTTP usage
 func (ca *CodeAnalyzer) hasInsecureHTTP(code string) bool {
 	matched, _ := regexp.MatchString(`http://`, code)
 	return matched
 }
-
-
-
 
 // hasWeakCryptography checks for weak cryptography usage
 func (ca *CodeAnalyzer) hasWeakCryptography(code string) bool {
@@ -547,5 +522,3 @@ func (ca *CodeAnalyzer) hasWeakCryptography(code string) bool {
 	matched, _ := regexp.MatchString(`(MD5|SHA1|DES|RC4|ECB)`, code)
 	return matched
 }
-
-

@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
 )
 
 // ApplicationRequirement represents the parsed requirements for an application
@@ -30,10 +29,10 @@ type ApplicationRequirement struct {
 
 // Entity represents a data entity in the application
 type Entity struct {
-	Name       string            `json:"name"`
-	Fields     []EntityField     `json:"fields"`
-	Relations  []EntityRelation  `json:"relations"`
-	Operations []string          `json:"operations"` // CRUD operations
+	Name       string           `json:"name"`
+	Fields     []EntityField    `json:"fields"`
+	Relations  []EntityRelation `json:"relations"`
+	Operations []string         `json:"operations"` // CRUD operations
 }
 
 // EntityField represents a field in an entity
@@ -237,7 +236,7 @@ Focus on extracting entities, relationships, and required functionality. Make re
 	}
 
 	responseText := geminiResp.Candidates[0].Content.Parts[0].Text
-	
+
 	// Extract JSON from the response (it might be wrapped in markdown)
 	jsonStart := strings.Index(responseText, "{")
 	jsonEnd := strings.LastIndex(responseText, "}")
@@ -246,7 +245,7 @@ Focus on extracting entities, relationships, and required functionality. Make re
 	}
 
 	jsonStr := responseText[jsonStart : jsonEnd+1]
-	
+
 	var appReq ApplicationRequirement
 	if err := json.Unmarshal([]byte(jsonStr), &appReq); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal application requirements: %v", err)
@@ -258,17 +257,17 @@ Focus on extracting entities, relationships, and required functionality. Make re
 // analyzeWithRules provides rule-based analysis as fallback
 func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*ApplicationRequirement, error) {
 	desc := strings.ToLower(userDescription)
-	
+
 	appReq := &ApplicationRequirement{
-		Name:        "Generated Application",
-		Description: userDescription,
-		Language:    "go", // default
-		Framework:   "gin", // default
-		Database:    "sqlite",
-		Features:    []string{},
-		Entities:    []Entity{},
-		Endpoints:   []APIEndpoint{},
-		Pages:       []UIPage{},
+		Name:         "Generated Application",
+		Description:  userDescription,
+		Language:     "go",  // default
+		Framework:    "gin", // default
+		Database:     "sqlite",
+		Features:     []string{},
+		Entities:     []Entity{},
+		Endpoints:    []APIEndpoint{},
+		Pages:        []UIPage{},
 		Dependencies: []string{},
 		Config: map[string]interface{}{
 			"port": 8080,
@@ -276,8 +275,8 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 	}
 
 	// Detect programming language from description
-	if strings.Contains(desc, "node") || strings.Contains(desc, "nodejs") || strings.Contains(desc, "node.js") || 
-	   strings.Contains(desc, "javascript") || strings.Contains(desc, "js") || strings.Contains(desc, "express") {
+	if strings.Contains(desc, "node") || strings.Contains(desc, "nodejs") || strings.Contains(desc, "node.js") ||
+		strings.Contains(desc, "javascript") || strings.Contains(desc, "js") || strings.Contains(desc, "express") {
 		appReq.Language = "javascript"
 		appReq.Framework = "express"
 		appReq.Dependencies = []string{"express", "cors", "helmet", "morgan"}
@@ -396,7 +395,7 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 	// Generate basic CRUD endpoints for each entity
 	for _, entity := range appReq.Entities {
 		entityLower := strings.ToLower(entity.Name)
-		
+
 		// GET all
 		appReq.Endpoints = append(appReq.Endpoints, APIEndpoint{
 			Method:      "GET",
@@ -505,4 +504,3 @@ func (ra *RequirementAnalyzer) ValidateRequirements(appReq *ApplicationRequireme
 func GetGeminiAPIKey() string {
 	return os.Getenv("GEMINI_API_KEY")
 }
-

@@ -48,13 +48,13 @@ type LogEntry struct {
 }
 
 type DebugResult struct {
-	Success      bool                   `json:"success"`
-	Issues       []DebugIssue           `json:"issues"`
-	Suggestions  []Suggestion           `json:"suggestions"`
-	Performance  PerformanceAnalysis    `json:"performance"`
-	MemoryLeaks  []MemoryLeak           `json:"memory_leaks"`
-	Metrics      map[string]interface{} `json:"metrics"`
-	Duration     time.Duration          `json:"duration"`
+	Success     bool                   `json:"success"`
+	Issues      []DebugIssue           `json:"issues"`
+	Suggestions []Suggestion           `json:"suggestions"`
+	Performance PerformanceAnalysis    `json:"performance"`
+	MemoryLeaks []MemoryLeak           `json:"memory_leaks"`
+	Metrics     map[string]interface{} `json:"metrics"`
+	Duration    time.Duration          `json:"duration"`
 }
 
 type DebugIssue struct {
@@ -77,10 +77,10 @@ type Suggestion struct {
 }
 
 type PerformanceAnalysis struct {
-	HotSpots        []HotSpot `json:"hot_spots"`
-	SlowFunctions   []SlowFunction `json:"slow_functions"`
-	MemoryUsage     MemoryUsage `json:"memory_usage"`
-	GoroutineLeaks  int `json:"goroutine_leaks"`
+	HotSpots       []HotSpot      `json:"hot_spots"`
+	SlowFunctions  []SlowFunction `json:"slow_functions"`
+	MemoryUsage    MemoryUsage    `json:"memory_usage"`
+	GoroutineLeaks int            `json:"goroutine_leaks"`
 }
 
 type HotSpot struct {
@@ -94,17 +94,17 @@ type HotSpot struct {
 }
 
 type SlowFunction struct {
-	Function    string        `json:"function"`
-	File        string        `json:"file"`
-	Line        int           `json:"line"`
-	Duration    time.Duration `json:"duration"`
-	Calls       int           `json:"calls"`
+	Function string        `json:"function"`
+	File     string        `json:"file"`
+	Line     int           `json:"line"`
+	Duration time.Duration `json:"duration"`
+	Calls    int           `json:"calls"`
 }
 
 type MemoryUsage struct {
-	HeapSize     int64 `json:"heap_size"`
-	StackSize    int64 `json:"stack_size"`
-	Allocations  int64 `json:"allocations"`
+	HeapSize      int64 `json:"heap_size"`
+	StackSize     int64 `json:"stack_size"`
+	Allocations   int64 `json:"allocations"`
 	Deallocations int64 `json:"deallocations"`
 }
 
@@ -133,37 +133,37 @@ func (d *Debugger) StartDebugSession() (*DebugSession, error) {
 		StackTrace:  []StackFrame{},
 		Logs:        []LogEntry{},
 	}
-	
+
 	return session, nil
 }
 
 func (d *Debugger) AnalyzeProject() DebugResult {
 	startTime := time.Now()
-	
+
 	result := DebugResult{
 		Success:     true,
 		Issues:      []DebugIssue{},
 		Suggestions: []Suggestion{},
 		Metrics:     make(map[string]interface{}),
 	}
-	
+
 	// Analyze code for common issues
 	d.analyzeCodeIssues(&result)
-	
+
 	// Analyze logs for errors
 	d.analyzeLogs(&result)
-	
+
 	// Check for performance issues
 	d.analyzePerformance(&result)
-	
+
 	// Check for memory leaks
 	d.analyzeMemoryLeaks(&result)
-	
+
 	// Generate suggestions
 	d.generateSuggestions(&result)
-	
+
 	result.Duration = time.Since(startTime)
-	
+
 	return result
 }
 
@@ -172,29 +172,29 @@ func (d *Debugger) analyzeCodeIssues(result *DebugResult) {
 		if err != nil {
 			return err
 		}
-		
+
 		if !d.isSourceFile(path) {
 			return nil
 		}
-		
+
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		
+
 		contentStr := string(content)
 		lines := strings.Split(contentStr, "\n")
-		
+
 		// Check for common Go issues
 		if strings.HasSuffix(path, ".go") {
 			d.analyzeGoIssues(path, lines, result)
 		}
-		
+
 		// Check for common JavaScript issues
 		if strings.HasSuffix(path, ".js") || strings.HasSuffix(path, ".ts") {
 			d.analyzeJavaScriptIssues(path, lines, result)
 		}
-		
+
 		return nil
 	})
 }
@@ -203,7 +203,7 @@ func (d *Debugger) analyzeGoIssues(filePath string, lines []string, result *Debu
 	for i, line := range lines {
 		lineNum := i + 1
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Check for potential nil pointer dereferences
 		if strings.Contains(trimmedLine, ".") && !strings.Contains(trimmedLine, "if") && !strings.Contains(trimmedLine, "!=") {
 			if matched, _ := regexp.MatchString(`\w+\.\w+`, trimmedLine); matched {
@@ -217,7 +217,7 @@ func (d *Debugger) analyzeGoIssues(filePath string, lines []string, result *Debu
 				})
 			}
 		}
-		
+
 		// Check for missing error handling
 		if strings.Contains(trimmedLine, ":=") && strings.Contains(trimmedLine, "err") && !strings.Contains(trimmedLine, "if err") {
 			nextLine := ""
@@ -235,7 +235,7 @@ func (d *Debugger) analyzeGoIssues(filePath string, lines []string, result *Debu
 				})
 			}
 		}
-		
+
 		// Check for goroutine leaks
 		if strings.Contains(trimmedLine, "go func") && !strings.Contains(trimmedLine, "defer") {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -247,7 +247,7 @@ func (d *Debugger) analyzeGoIssues(filePath string, lines []string, result *Debu
 				Context:     trimmedLine,
 			})
 		}
-		
+
 		// Check for hardcoded values
 		if matched, _ := regexp.MatchString(`"(http://|https://|localhost|127\.0\.0\.1)"`, trimmedLine); matched {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -266,7 +266,7 @@ func (d *Debugger) analyzeJavaScriptIssues(filePath string, lines []string, resu
 	for i, line := range lines {
 		lineNum := i + 1
 		trimmedLine := strings.TrimSpace(line)
-		
+
 		// Check for console.log statements
 		if strings.Contains(trimmedLine, "console.log") {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -278,7 +278,7 @@ func (d *Debugger) analyzeJavaScriptIssues(filePath string, lines []string, resu
 				Context:     trimmedLine,
 			})
 		}
-		
+
 		// Check for == instead of ===
 		if strings.Contains(trimmedLine, "==") && !strings.Contains(trimmedLine, "===") {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -290,7 +290,7 @@ func (d *Debugger) analyzeJavaScriptIssues(filePath string, lines []string, resu
 				Context:     trimmedLine,
 			})
 		}
-		
+
 		// Check for var declarations
 		if matched, _ := regexp.MatchString(`^\s*var\s+`, trimmedLine); matched {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -307,7 +307,7 @@ func (d *Debugger) analyzeJavaScriptIssues(filePath string, lines []string, resu
 
 func (d *Debugger) analyzeLogs(result *DebugResult) {
 	logFiles := d.findLogFiles()
-	
+
 	for _, logFile := range logFiles {
 		d.analyzeLogFile(logFile, result)
 	}
@@ -315,19 +315,19 @@ func (d *Debugger) analyzeLogs(result *DebugResult) {
 
 func (d *Debugger) findLogFiles() []string {
 	var logFiles []string
-	
+
 	filepath.Walk(d.projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if strings.HasSuffix(path, ".log") || strings.Contains(path, "log") {
 			logFiles = append(logFiles, path)
 		}
-		
+
 		return nil
 	})
-	
+
 	return logFiles
 }
 
@@ -337,14 +337,14 @@ func (d *Debugger) analyzeLogFile(logFile string, result *DebugResult) {
 		return
 	}
 	defer file.Close()
-	
+
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
-	
+
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Text()
-		
+
 		// Check for error patterns
 		if d.containsErrorPattern(line) {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -356,7 +356,7 @@ func (d *Debugger) analyzeLogFile(logFile string, result *DebugResult) {
 				Context:     line,
 			})
 		}
-		
+
 		// Check for warning patterns
 		if d.containsWarningPattern(line) {
 			result.Issues = append(result.Issues, DebugIssue{
@@ -379,13 +379,13 @@ func (d *Debugger) containsErrorPattern(line string) bool {
 		"exception", "Exception",
 		"failed", "Failed",
 	}
-	
+
 	for _, pattern := range errorPatterns {
 		if strings.Contains(line, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
@@ -395,45 +395,45 @@ func (d *Debugger) containsWarningPattern(line string) bool {
 		"deprecated", "Deprecated",
 		"timeout", "Timeout",
 	}
-	
+
 	for _, pattern := range warningPatterns {
 		if strings.Contains(line, pattern) {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (d *Debugger) analyzePerformance(result *DebugResult) {
 	// This is a simplified performance analysis
 	// In a real implementation, you would use profiling tools
-	
+
 	result.Performance = PerformanceAnalysis{
 		HotSpots:       []HotSpot{},
 		SlowFunctions:  []SlowFunction{},
 		MemoryUsage:    MemoryUsage{},
 		GoroutineLeaks: 0,
 	}
-	
+
 	// Check for potential performance issues in code
 	filepath.Walk(d.projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || !strings.HasSuffix(path, ".go") {
 			return err
 		}
-		
+
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		
+
 		contentStr := string(content)
 		lines := strings.Split(contentStr, "\n")
-		
+
 		for i, line := range lines {
 			lineNum := i + 1
 			trimmedLine := strings.TrimSpace(line)
-			
+
 			// Check for loops that might be inefficient
 			if strings.Contains(trimmedLine, "for") && strings.Contains(trimmedLine, "range") {
 				if strings.Contains(trimmedLine, "append") {
@@ -447,7 +447,7 @@ func (d *Debugger) analyzePerformance(result *DebugResult) {
 					})
 				}
 			}
-			
+
 			// Check for string concatenation in loops
 			if strings.Contains(trimmedLine, "for") && strings.Contains(trimmedLine, "+") && strings.Contains(trimmedLine, "string") {
 				result.Issues = append(result.Issues, DebugIssue{
@@ -460,7 +460,7 @@ func (d *Debugger) analyzePerformance(result *DebugResult) {
 				})
 			}
 		}
-		
+
 		return nil
 	})
 }
@@ -468,22 +468,22 @@ func (d *Debugger) analyzePerformance(result *DebugResult) {
 func (d *Debugger) analyzeMemoryLeaks(result *DebugResult) {
 	// Simplified memory leak detection
 	result.MemoryLeaks = []MemoryLeak{}
-	
+
 	// This would typically involve running the application with memory profiling
 	// For now, we'll just check for common patterns that can cause leaks
-	
+
 	filepath.Walk(d.projectPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || !strings.HasSuffix(path, ".go") {
 			return err
 		}
-		
+
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		
+
 		contentStr := string(content)
-		
+
 		// Check for unclosed resources
 		if strings.Contains(contentStr, "os.Open") && !strings.Contains(contentStr, "defer") {
 			result.MemoryLeaks = append(result.MemoryLeaks, MemoryLeak{
@@ -492,7 +492,7 @@ func (d *Debugger) analyzeMemoryLeaks(result *DebugResult) {
 				Description: "File opened without defer close - potential resource leak",
 			})
 		}
-		
+
 		return nil
 	})
 }
@@ -534,36 +534,36 @@ func (d *Debugger) generateSuggestions(result *DebugResult) {
 func (d *Debugger) isSourceFile(path string) bool {
 	ext := filepath.Ext(path)
 	sourceExts := []string{".go", ".js", ".ts", ".py", ".java", ".cpp", ".c", ".h"}
-	
+
 	for _, sourceExt := range sourceExts {
 		if ext == sourceExt {
 			return true
 		}
 	}
-	
+
 	return false
 }
 
 func (d *Debugger) RunProfiler(duration time.Duration) (map[string]interface{}, error) {
 	// This would run a profiler for the specified duration
 	// For Go applications, this could use pprof
-	
+
 	result := make(map[string]interface{})
-	
+
 	// Simulate profiling
 	time.Sleep(duration)
-	
+
 	result["cpu_profile"] = "cpu_profile_data"
 	result["memory_profile"] = "memory_profile_data"
 	result["goroutine_profile"] = "goroutine_profile_data"
-	
+
 	return result, nil
 }
 
 func (d *Debugger) AttachDebugger(processID int) error {
 	// This would attach a debugger to a running process
 	// For Go, this could use delve
-	
+
 	cmd := exec.Command("dlv", "attach", fmt.Sprintf("%d", processID))
 	return cmd.Start()
 }
@@ -571,13 +571,12 @@ func (d *Debugger) AttachDebugger(processID int) error {
 func (d *Debugger) SetBreakpoint(file string, line int) error {
 	// This would set a breakpoint in the debugger
 	// Implementation would depend on the specific debugger being used
-	
+
 	return nil
 }
 
 func (d *Debugger) GetStackTrace() ([]StackFrame, error) {
 	// This would get the current stack trace from the debugger
-	
+
 	return []StackFrame{}, nil
 }
-

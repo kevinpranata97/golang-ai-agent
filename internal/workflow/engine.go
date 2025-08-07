@@ -11,10 +11,10 @@ import (
 )
 
 type Engine struct {
-	workflows   map[string]Workflow
-	activeJobs  int
-	totalJobs   int
-	mutex       sync.RWMutex
+	workflows  map[string]Workflow
+	activeJobs int
+	totalJobs  int
+	mutex      sync.RWMutex
 }
 
 type Workflow struct {
@@ -45,12 +45,12 @@ type Commit struct {
 }
 
 type Result struct {
-	Success   bool                   `json:"success"`
-	Error     string                 `json:"error,omitempty"`
-	Steps     []StepResult           `json:"steps"`
-	Duration  time.Duration          `json:"duration"`
-	Context   Context                `json:"context"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Success  bool                   `json:"success"`
+	Error    string                 `json:"error,omitempty"`
+	Steps    []StepResult           `json:"steps"`
+	Duration time.Duration          `json:"duration"`
+	Context  Context                `json:"context"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type StepResult struct {
@@ -65,10 +65,10 @@ func NewEngine() *Engine {
 	engine := &Engine{
 		workflows: make(map[string]Workflow),
 	}
-	
+
 	// Register default workflows
 	engine.registerDefaultWorkflows()
-	
+
 	return engine
 }
 
@@ -109,7 +109,7 @@ func (e *Engine) registerDefaultWorkflows() {
 			},
 		},
 	}
-	
+
 	e.workflows["ci_cd"] = cicdWorkflow
 }
 
@@ -118,13 +118,13 @@ func (e *Engine) ExecuteWorkflow(name string, ctx Context) Result {
 	e.activeJobs++
 	e.totalJobs++
 	e.mutex.Unlock()
-	
+
 	defer func() {
 		e.mutex.Lock()
 		e.activeJobs--
 		e.mutex.Unlock()
 	}()
-	
+
 	workflow, exists := e.workflows[name]
 	if !exists {
 		return Result{
@@ -133,9 +133,9 @@ func (e *Engine) ExecuteWorkflow(name string, ctx Context) Result {
 			Context: ctx,
 		}
 	}
-	
+
 	log.Printf("Executing workflow '%s' for repository '%s'", name, ctx.Repository)
-	
+
 	startTime := time.Now()
 	result := Result{
 		Success:  true,
@@ -143,7 +143,7 @@ func (e *Engine) ExecuteWorkflow(name string, ctx Context) Result {
 		Context:  ctx,
 		Metadata: make(map[string]interface{}),
 	}
-	
+
 	// Create temporary working directory
 	tempDir, err := os.MkdirTemp("", "workflow_"+name+"_")
 	if err != nil {
@@ -153,41 +153,41 @@ func (e *Engine) ExecuteWorkflow(name string, ctx Context) Result {
 		return result
 	}
 	defer os.RemoveAll(tempDir)
-	
+
 	ctx.WorkDir = tempDir
-	
+
 	// Execute each step
 	for _, step := range workflow.Steps {
 		stepResult := e.executeStep(step, ctx)
 		result.Steps = append(result.Steps, stepResult)
-		
+
 		if !stepResult.Success {
 			result.Success = false
 			result.Error = fmt.Sprintf("step '%s' failed: %s", step.Name, stepResult.Error)
 			break
 		}
 	}
-	
+
 	result.Duration = time.Since(startTime)
 	log.Printf("Workflow '%s' completed in %v, success: %v", name, result.Duration, result.Success)
-	
+
 	return result
 }
 
 func (e *Engine) executeStep(step Step, ctx Context) StepResult {
 	log.Printf("Executing step: %s", step.Name)
-	
+
 	startTime := time.Now()
 	stepResult := StepResult{
 		Name:    step.Name,
 		Success: true,
 	}
-	
+
 	// Prepare command and arguments
 	command := step.Command
 	args := make([]string, len(step.Args))
 	copy(args, step.Args)
-	
+
 	// Handle special cases
 	switch step.Name {
 	case "clone":
@@ -221,7 +221,7 @@ func (e *Engine) executeStep(step Step, ctx Context) StepResult {
 			args = []string{"test"}
 		}
 	}
-	
+
 	// Set working directory
 	workDir := ctx.WorkDir
 	if step.WorkDir != "" {
@@ -229,15 +229,15 @@ func (e *Engine) executeStep(step Step, ctx Context) StepResult {
 	} else if step.Name != "clone" {
 		workDir = filepath.Join(ctx.WorkDir, "repo")
 	}
-	
+
 	// Execute command
 	cmd := exec.Command(command, args...)
 	cmd.Dir = workDir
-	
+
 	output, err := cmd.CombinedOutput()
 	stepResult.Output = string(output)
 	stepResult.Duration = time.Since(startTime)
-	
+
 	if err != nil {
 		stepResult.Success = false
 		stepResult.Error = err.Error()
@@ -245,7 +245,7 @@ func (e *Engine) executeStep(step Step, ctx Context) StepResult {
 	} else {
 		log.Printf("Step '%s' completed successfully", step.Name)
 	}
-	
+
 	return stepResult
 }
 
@@ -275,11 +275,10 @@ func (e *Engine) RegisterWorkflow(workflow Workflow) {
 func (e *Engine) ListWorkflows() []string {
 	e.mutex.RLock()
 	defer e.mutex.RUnlock()
-	
+
 	names := make([]string, 0, len(e.workflows))
 	for name := range e.workflows {
 		names = append(names, name)
 	}
 	return names
 }
-

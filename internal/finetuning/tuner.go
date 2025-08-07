@@ -79,5 +79,3 @@ func (f *Finetuner) Train() error {
 	// dan menyimpan model yang telah di-fine-tune.
 	return nil
 }
-
-

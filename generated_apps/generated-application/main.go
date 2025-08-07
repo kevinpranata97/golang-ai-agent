@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"generated-application/internal/config"
 	"generated-application/internal/database"
 	"generated-application/internal/handlers"
 	"generated-application/internal/routes"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -31,12 +31,12 @@ func main() {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
-		
+
 		c.Next()
 	})
 

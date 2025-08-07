@@ -34,8 +34,7 @@ func Initialize(databaseURL string) (*sql.DB, error) {
 
 // runMigrations runs database migrations
 func runMigrations(db *sql.DB) error {
-	migrations := []string{
-	}
+	migrations := []string{}
 
 	for _, migration := range migrations {
 		if _, err := db.Exec(migration); err != nil {

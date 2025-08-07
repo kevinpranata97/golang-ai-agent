@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
 	"generated-application/internal/handlers"
+	"github.com/gin-gonic/gin"
 )
 
 // Setup configures all routes

@@ -14,13 +14,13 @@ import (
 
 // Agent represents the core AI agent
 type Agent struct {
-	ID        string
-	Status    string
-	CreatedAt time.Time
-	Jobs      map[string]*Job
-	Storage *storage.FileStorage
-	GithubClient *github.Client
-	TestRunner *testingpkg.TestRunner
+	ID             string
+	Status         string
+	CreatedAt      time.Time
+	Jobs           map[string]*Job
+	Storage        *storage.FileStorage
+	GithubClient   *github.Client
+	TestRunner     *testingpkg.TestRunner
 	WorkflowEngine *workflow.Engine
 }
 
@@ -39,13 +39,13 @@ type Job struct {
 // NewAgent creates a new AI agent instance
 func NewAgent(storage *storage.FileStorage, githubClient *github.Client, testRunner *testingpkg.TestRunner, workflowEngine *workflow.Engine) *Agent {
 	return &Agent{
-		ID:        generateID(),
-		Status:    "idle",
-		CreatedAt: time.Now(),
-		Jobs:      make(map[string]*Job),
-		Storage: storage,
-		GithubClient: githubClient,
-		TestRunner: testRunner,
+		ID:             generateID(),
+		Status:         "idle",
+		CreatedAt:      time.Now(),
+		Jobs:           make(map[string]*Job),
+		Storage:        storage,
+		GithubClient:   githubClient,
+		TestRunner:     testRunner,
 		WorkflowEngine: workflowEngine,
 	}
 }
@@ -67,11 +67,11 @@ func (a *Agent) GetStatus() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"id":            a.ID,
-		"status":        a.Status,
-		"created_at":    a.CreatedAt,
-		"active_jobs":   activeJobs,
-		"total_jobs":    len(a.Jobs),
+		"id":          a.ID,
+		"status":      a.Status,
+		"created_at":  a.CreatedAt,
+		"active_jobs": activeJobs,
+		"total_jobs":  len(a.Jobs),
 		"capabilities": []string{
 			"application_generation",
 			"requirement_analysis",
@@ -134,5 +134,3 @@ func (a *Agent) FailJob(jobID string, err error) error {
 	job.Error = err.Error()
 	return nil
 }
-
-

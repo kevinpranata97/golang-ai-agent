@@ -40,104 +40,104 @@ func NewClient(token string) *Client {
 
 func (c *Client) SetCommitStatus(repo, sha, state, description string) error {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/statuses/%s", repo, sha)
-	
+
 	status := CommitStatus{
 		State:       state,
 		Description: description,
 		Context:     "golang-ai-agent",
 	}
-	
+
 	jsonData, err := json.Marshal(status)
 	if err != nil {
 		return err
 	}
-	
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return err
 	}
-	
+
 	req.Header.Set("Authorization", "token "+c.token)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusCreated {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("failed to set commit status: %s", string(body))
 	}
-	
+
 	return nil
 }
 
 func (c *Client) GetRepository(repo string) (*Repository, error) {
 	url := fmt.Sprintf("https://api.github.com/repos/%s", repo)
-	
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req.Header.Set("Authorization", "token "+c.token)
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	
+
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to get repository: %d", resp.StatusCode)
 	}
-	
+
 	var repository Repository
 	if err := json.NewDecoder(resp.Body).Decode(&repository); err != nil {
 		return nil, err
 	}
-	
+
 	return &repository, nil
 }
 
 func (c *Client) CloneRepository(cloneURL, destination string) error {
 	// Add token to clone URL for authentication
 	authenticatedURL := strings.Replace(cloneURL, "https://", fmt.Sprintf("https://%s@", c.token), 1)
-	
+
 	cmd := exec.Command("git", "clone", authenticatedURL, destination)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to clone repository: %s, output: %s", err, string(output))
 	}
-	
+
 	return nil
 }
 
 func (c *Client) AnalyzeRepository(repoPath string) (*RepositoryAnalysis, error) {
 	analysis := &RepositoryAnalysis{
-		Languages:    make(map[string]int),
-		Files:        []string{},
-		HasTests:     false,
+		Languages:     make(map[string]int),
+		Files:         []string{},
+		HasTests:      false,
 		HasDockerfile: false,
-		HasMakefile:  false,
+		HasMakefile:   false,
 	}
-	
+
 	err := filepath.Walk(repoPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		
+
 		if info.IsDir() {
 			return nil
 		}
-		
+
 		relPath, _ := filepath.Rel(repoPath, path)
 		analysis.Files = append(analysis.Files, relPath)
-		
+
 		// Analyze file types
 		ext := filepath.Ext(path)
 		switch ext {
@@ -159,7 +159,7 @@ func (c *Client) AnalyzeRepository(repoPath string) (*RepositoryAnalysis, error)
 		case ".c":
 			analysis.Languages["C"]++
 		}
-		
+
 		// Check for special files
 		filename := filepath.Base(path)
 		switch filename {
@@ -172,10 +172,10 @@ func (c *Client) AnalyzeRepository(repoPath string) (*RepositoryAnalysis, error)
 		case "go.mod":
 			analysis.HasGoMod = true
 		}
-		
+
 		return nil
 	})
-	
+
 	return analysis, err
 }
 
@@ -188,4 +188,3 @@ type RepositoryAnalysis struct {
 	HasPackageJSON bool           `json:"has_package_json"`
 	HasGoMod       bool           `json:"has_go_mod"`
 }
-

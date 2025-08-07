@@ -836,7 +836,7 @@ func (cg *CodeGenerator) generateCreateTableSQL(entity requirements.Entity) stri
 	for _, field := range entity.Fields {
 		sqlType := cg.mapFieldTypeToSQL(field.Type)
 		fieldDef := fmt.Sprintf("%s %s", field.Name, sqlType)
-		
+
 		if field.Name == "id" {
 			fieldDef += " PRIMARY KEY AUTOINCREMENT"
 		} else if field.Required {
@@ -1529,8 +1529,6 @@ func {{.Function}}(args []string) {
 
 	return tmpl.Execute(file, data)
 }
-
-
 
 // generateJavaScriptAPIApplication generates a REST API application in Node.js/JavaScript
 func (cg *CodeGenerator) generateJavaScriptAPIApplication(appDir string, appReq *requirements.ApplicationRequirement) error {
@@ -2477,4 +2475,3 @@ func (cg *CodeGenerator) generateGoCLIApplication(appDir string, appReq *require
 	// TODO: Implement Go CLI application generation
 	return fmt.Errorf("Go CLI application generation not yet implemented")
 }
-
