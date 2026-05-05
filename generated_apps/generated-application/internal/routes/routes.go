@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"generated-application/internal/handlers"
 	"github.com/gin-gonic/gin"
+	"generated-application/internal/handlers"
 )
 
 // Setup configures all routes
@@ -15,9 +15,12 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 	// API routes
 	api := r.Group("/api")
 	{
-		api.POST("/tasks", h.AddTask)
-		api.GET("/tasks", h.ListTasks)
-		api.PUT("/tasks/:id", h.UpdateTask)
-		api.DELETE("/tasks/:id", h.DeleteTask)
+		// Post routes
+		api.GET("/posts", h.GetAllPosts)
+		api.GET("/posts/:id", h.GetPost)
+		api.POST("/posts", h.CreatePost)
+		api.PUT("/posts/:id", h.UpdatePost)
+		api.DELETE("/posts/:id", h.DeletePost)
+
 	}
 }

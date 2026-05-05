@@ -34,7 +34,9 @@ func Initialize(databaseURL string) (*sql.DB, error) {
 
 // runMigrations runs database migrations
 func runMigrations(db *sql.DB) error {
-	migrations := []string{}
+	migrations := []string{
+		`CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, content TEXT NOT NULL, author_id INTEGER NOT NULL, published BOOLEAN NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL)`,
+	}
 
 	for _, migration := range migrations {
 		if _, err := db.Exec(migration); err != nil {
