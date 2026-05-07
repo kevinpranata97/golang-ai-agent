@@ -318,14 +318,14 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 		appReq.Language = "go"
 		if strings.Contains(desc, "echo") {
 			appReq.Framework = "echo"
-			appReq.Dependencies = []string{"github.com/labstack/echo/v4", "github.com/labstack/echo/v4/middleware"}
-		} else if strings.Contains(desc, "fiber") {
-			appReq.Framework = "fiber"
-			appReq.Dependencies = []string{"github.com/gofiber/fiber/v2", "github.com/gofiber/fiber/v2/middleware/cors"}
-		} else {
-			appReq.Framework = "gin"
-			appReq.Dependencies = []string{"github.com/gin-gonic/gin", "github.com/gin-contrib/cors"}
-		}
+				appReq.Dependencies = []string{"github.com/labstack/echo/v4 v4.11.1", "github.com/labstack/echo/v4/middleware v4.11.1"}
+			} else if strings.Contains(desc, "fiber") {
+				appReq.Framework = "fiber"
+				appReq.Dependencies = []string{"github.com/gofiber/fiber/v2 v2.48.0", "github.com/gofiber/fiber/v2/middleware/cors v2.48.0"}
+			} else {
+				appReq.Framework = "gin"
+				appReq.Dependencies = []string{"github.com/gin-gonic/gin v1.9.1", "github.com/gin-contrib/cors v1.4.0"}
+			}
 	}
 
 	// Determine application type
