@@ -394,7 +394,7 @@ func Create{{.Name}}(db *sql.DB, {{.LowerName}} *{{.Name}}) error {
 		return err
 	}
 
-	{{.LowerName}}.ID = int(id)
+	{{.LowerName}}.Id = int(id)
 	return nil
 }
 
@@ -403,7 +403,7 @@ func Get{{.Name}}ByID(db *sql.DB, id int) (*{{.Name}}, error) {
 	{{.LowerName}} := &{{.Name}}{}
 	query := ` + "`SELECT {{.SelectFields}} FROM {{.TableName}} WHERE id = ?`" + `
 	
-	err := db.QueryRow(query, id).Scan({{range .ScanFields}}&{{$.LowerName}}.{{.}}{{end}})
+	err := db.QueryRow(query, id).Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +424,7 @@ func GetAll{{.Name}}s(db *sql.DB) ([]{{.Name}}, error) {
 	var {{.LowerName}}s []{{.Name}}
 	for rows.Next() {
 		{{.LowerName}} := {{.Name}}{}
-		err := rows.Scan({{range .ScanFields}}&{{$.LowerName}}.{{.}}{{end}})
+		err := rows.Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
 		if err != nil {
 			return nil, err
 		}
@@ -438,7 +438,7 @@ func GetAll{{.Name}}s(db *sql.DB) ([]{{.Name}}, error) {
 func Update{{.Name}}(db *sql.DB, {{.LowerName}} *{{.Name}}) error {
 	query := ` + "`UPDATE {{.TableName}} SET {{.UpdateFields}} WHERE id = ?`" + `
 	
-	_, err := db.Exec(query{{range .UpdateValues}}, {{$.LowerName}}.{{.}}{{end}}, {{.LowerName}}.ID)
+	_, err := db.Exec(query{{range .UpdateValues}}, {{$.LowerName}}.{{.}}{{end}}, {{.LowerName}}.Id)
 	return err
 }
 
@@ -681,7 +681,7 @@ func (h *Handler) Update{{.Name}}(c *gin.Context) {
 		return
 	}
 
-	{{.LowerName}}.ID = id
+	{{.LowerName}}.Id = id
 	if err := models.Update{{.Name}}(h.DB, &{{.LowerName}}); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
