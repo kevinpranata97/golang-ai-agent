@@ -164,7 +164,7 @@ func (d *DB) MarkLogsAsProcessed(ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
-	// Create a string of \'?\' placeholders for the IN clause
+	// Create a string of '?' placeholders for the IN clause
 	placeholders := make([]string, len(ids))
 	for i := range ids {
 		placeholders[i] = "?"

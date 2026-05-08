@@ -16,12 +16,12 @@ FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates git curl libstdc++
 
-WORKDIR /root/
+WORKDIR /app/
 
 COPY --from=builder /app/main .
 COPY --from=builder /app/config.json* ./
 
-RUN mkdir -p ./data
+RUN mkdir -p ./data ./generated_apps
 
 EXPOSE 8080
 
