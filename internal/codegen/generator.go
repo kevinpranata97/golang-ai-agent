@@ -3,6 +3,7 @@ package codegen
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -178,6 +179,13 @@ func (cg *CodeGenerator) generateGoAPIApplication(appDir string, appReq *require
 		return err
 	}
 
+	// Run go mod tidy to generate go.sum and download dependencies
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = appDir
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to run go mod tidy: %v, output: %s", err, string(output))
+	}
+
 	return nil
 }
 
@@ -319,7 +327,7 @@ func main() {
 func (cg *CodeGenerator) generateGoMod(appDir string, appReq *requirements.ApplicationRequirement) error {
 	modTemplate := `module {{.ModuleName}}
 
-go 1.21
+go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.9.1
@@ -897,6 +905,7 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 
 	// API routes
 	api := r.Group("/api")
+	_ = api
 	{
 {{range .Entities}}		// {{.Name}} routes
 		api.GET("/{{.LowerPlural}}", h.GetAll{{.Name}}s)

@@ -14,6 +14,7 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 
 	// API routes
 	api := r.Group("/api")
+	_ = api
 	{
 	}
 }
