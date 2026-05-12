@@ -402,53 +402,53 @@ func Create{{.Name}}(db *sql.DB, {{.LowerName}} *{{.Name}}) error {
 		return err
 	}
 
-	{{.LowerName}}.Id = int(id)
-	return nil
-}
-
-// Get{{.Name}}ByID retrieves a {{.Name}} by ID
-func Get{{.Name}}ByID(db *sql.DB, id int) (*{{.Name}}, error) {
-	{{.LowerName}} := &{{.Name}}{}
-	query := ` + "`SELECT {{.SelectFields}} FROM {{.TableName}} WHERE id = ?`" + `
-	
-	err := db.QueryRow(query, id).Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
-	if err != nil {
-		return nil, err
+		{{.LowerName}}.ID = int(id)
+		return nil
 	}
-
-	return {{.LowerName}}, nil
-}
-
-// GetAll{{.Name}}s retrieves all {{.Name}}s
-func GetAll{{.Name}}s(db *sql.DB) ([]{{.Name}}, error) {
-	query := ` + "`SELECT {{.SelectFields}} FROM {{.TableName}}`" + `
 	
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var {{.LowerName}}s []{{.Name}}
-	for rows.Next() {
-		{{.LowerName}} := {{.Name}}{}
-		err := rows.Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
+	// Get{{.Name}}ByID retrieves a {{.Name}} by ID
+	func Get{{.Name}}ByID(db *sql.DB, id int) (*{{.Name}}, error) {
+		{{.LowerName}} := &{{.Name}}{}
+		query := ` + "`SELECT {{.SelectFields}} FROM {{.TableName}} WHERE id = ?`" + `
+		
+		err := db.QueryRow(query, id).Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
 		if err != nil {
 			return nil, err
 		}
-		{{.LowerName}}s = append({{.LowerName}}s, {{.LowerName}})
-	}
-
-	return {{.LowerName}}s, nil
-}
-
-// Update{{.Name}} updates a {{.Name}} in the database
-func Update{{.Name}}(db *sql.DB, {{.LowerName}} *{{.Name}}) error {
-	query := ` + "`UPDATE {{.TableName}} SET {{.UpdateFields}} WHERE id = ?`" + `
 	
-	_, err := db.Exec(query{{range .UpdateValues}}, {{$.LowerName}}.{{.}}{{end}}, {{.LowerName}}.Id)
-	return err
-}
+		return {{.LowerName}}, nil
+	}
+	
+	// GetAll{{.Name}}s retrieves all {{.Name}}s
+	func GetAll{{.Name}}s(db *sql.DB) ([]{{.Name}}, error) {
+		query := ` + "`SELECT {{.SelectFields}} FROM {{.TableName}}`" + `
+		
+		rows, err := db.Query(query)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+	
+		var {{.LowerName}}s []{{.Name}}
+		for rows.Next() {
+			{{.LowerName}} := {{.Name}}{}
+			err := rows.Scan({{range $i, $field := .ScanFields}}{{if $i}}, {{end}}&{{$.LowerName}}.{{$field}}{{end}})
+			if err != nil {
+				return nil, err
+			}
+			{{.LowerName}}s = append({{.LowerName}}s, {{.LowerName}})
+		}
+	
+		return {{.LowerName}}s, nil
+	}
+	
+	// Update{{.Name}} updates a {{.Name}} in the database
+	func Update{{.Name}}(db *sql.DB, {{.LowerName}} *{{.Name}}) error {
+		query := ` + "`UPDATE {{.TableName}} SET {{.UpdateFields}} WHERE id = ?`" + `
+		
+		_, err := db.Exec(query{{range .UpdateValues}}, {{$.LowerName}}.{{.}}{{end}}, {{.LowerName}}.ID)
+		return err
+	}
 
 // Delete{{.Name}} deletes a {{.Name}} from the database
 func Delete{{.Name}}(db *sql.DB, id int) error {
@@ -495,17 +495,20 @@ func (cg *CodeGenerator) prepareModelData(entity requirements.Entity) map[string
 	var updateValues []string
 
 	// Fix template execution issue by ensuring all fields are properly set
-	for _, field := range entity.Fields {
-		goType := cg.mapFieldTypeToGo(field.Type)
-		goName := strings.Title(field.Name)
-		jsonName := strings.ToLower(field.Name)
-
-		fields = append(fields, map[string]interface{}{
-			"GoName":   goName,
-			"GoType":   goType,
-			"JSONName": jsonName,
-			"Required": field.Required,
-		})
+		for _, field := range entity.Fields {
+			goType := cg.mapFieldTypeToGo(field.Type)
+			goName := strings.Title(field.Name)
+			if strings.ToLower(field.Name) == "id" {
+				goName = "ID"
+			}
+			jsonName := strings.ToLower(field.Name)
+	
+			fields = append(fields, map[string]interface{}{
+				"GoName":   goName,
+				"GoType":   goType,
+				"JSONName": jsonName,
+				"Required": field.Required,
+			})
 
 		if field.Name != "id" && field.Name != "created_at" {
 			insertFields = append(insertFields, field.Name)
@@ -689,7 +692,7 @@ func (h *Handler) Update{{.Name}}(c *gin.Context) {
 		return
 	}
 
-	{{.LowerName}}.Id = id
+	{{.LowerName}}.ID = id
 	if err := models.Update{{.Name}}(h.DB, &{{.LowerName}}); err != nil {
 		c.JSON(http.StatusInternalServerError, ErrorResponse{Error: err.Error()})
 		return
@@ -764,21 +767,34 @@ func (cg *CodeGenerator) generateDatabase(appDir string, appReq *requirements.Ap
 func (cg *CodeGenerator) generateDatabaseInit(dbDir string, appReq *requirements.ApplicationRequirement) error {
 	dbTemplate := `package database
 
-import (
-	"database/sql"
-	"fmt"
-	"log"
+	import (
+		"database/sql"
+		"fmt"
+		"log"
+		"os"
+		"path/filepath"
+		"strings"
+	
+		_ "github.com/mattn/go-sqlite3"
+	)
 
-	_ "github.com/mattn/go-sqlite3"
-)
-
-// Initialize initializes the database connection and runs migrations
-func Initialize(databaseURL string) (*sql.DB, error) {
-	if databaseURL == "" {
-		databaseURL = "./app.db"
-	}
-
-	db, err := sql.Open("sqlite3", databaseURL)
+	// Initialize initializes the database connection and runs migrations
+	func Initialize(databaseURL string) (*sql.DB, error) {
+		if databaseURL == "" {
+			databaseURL = "./app.db"
+		}
+	
+		// Ensure directory exists for SQLite
+		if !strings.HasPrefix(databaseURL, "file:") {
+			dir := filepath.Dir(databaseURL)
+			if dir != "." && dir != "/" {
+				if err := os.MkdirAll(dir, 0755); err != nil {
+					return nil, fmt.Errorf("failed to create database directory: %v", err)
+				}
+			}
+		}
+	
+		db, err := sql.Open("sqlite3", databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %v", err)
 	}
