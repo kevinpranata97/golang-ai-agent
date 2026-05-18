@@ -180,10 +180,15 @@ func (cg *CodeGenerator) generateGoAPIApplication(appDir string, appReq *require
 	}
 
 	// Run go mod tidy to generate go.sum and download dependencies
-	cmd := exec.Command("go", "mod", "tidy")
-	cmd.Dir = appDir
-	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("failed to run go mod tidy: %v, output: %s", err, string(output))
+	// We check if go is installed first to avoid errors
+	if _, err := exec.LookPath("go"); err == nil {
+		cmd := exec.Command("go", "mod", "tidy")
+		cmd.Dir = appDir
+		if output, err := cmd.CombinedOutput(); err != nil {
+			fmt.Printf("Warning: failed to run go mod tidy: %v, output: %s\n", err, string(output))
+		}
+	} else {
+		fmt.Println("Warning: 'go' executable not found, skipping 'go mod tidy'")
 	}
 
 	return nil
@@ -921,7 +926,6 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 
 	// API routes
 	api := r.Group("/api")
-	_ = api
 	{
 {{range .Entities}}		// {{.Name}} routes
 		api.GET("/{{.LowerPlural}}", h.GetAll{{.Name}}s)
@@ -929,7 +933,6 @@ func Setup(r *gin.Engine, h *handlers.Handler) {
 		api.POST("/{{.LowerPlural}}", h.Create{{.Name}})
 		api.PUT("/{{.LowerPlural}}/:id", h.Update{{.Name}})
 		api.DELETE("/{{.LowerPlural}}/:id", h.Delete{{.Name}})
-
 {{end}}	}
 }
 `
