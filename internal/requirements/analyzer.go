@@ -356,7 +356,7 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 		appReq.Features = append(appReq.Features, "user_management", "authentication")
 	}
 
-	if strings.Contains(desc, "product") || strings.Contains(desc, "item") || strings.Contains(desc, "catalog") {
+	if strings.Contains(desc, "product") || strings.Contains(desc, "item") || strings.Contains(desc, "catalog") || strings.Contains(desc, "storage") || strings.Contains(desc, "construction") {
 		productEntity := Entity{
 			Name: "Product",
 			Fields: []EntityField{
@@ -364,12 +364,13 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 				{Name: "name", Type: "string", Required: true, Validation: "min=1,max=200"},
 				{Name: "description", Type: "string", Required: false},
 				{Name: "price", Type: "float", Required: true, Validation: "min=0"},
+				{Name: "quantity", Type: "int", Required: true, Validation: "min=0"},
 				{Name: "created_at", Type: "date", Required: true},
 			},
 			Operations: []string{"create", "read", "update", "delete"},
 		}
 		appReq.Entities = append(appReq.Entities, productEntity)
-		appReq.Features = append(appReq.Features, "product_management")
+		appReq.Features = append(appReq.Features, "product_management", "storage_calculation")
 	}
 
 	if strings.Contains(desc, "blog") || strings.Contains(desc, "post") || strings.Contains(desc, "article") {
