@@ -356,22 +356,39 @@ func (ra *RequirementAnalyzer) analyzeWithRules(userDescription string) (*Applic
 		appReq.Features = append(appReq.Features, "user_management", "authentication")
 	}
 
-	if strings.Contains(desc, "product") || strings.Contains(desc, "item") || strings.Contains(desc, "catalog") || strings.Contains(desc, "storage") || strings.Contains(desc, "construction") {
-		productEntity := Entity{
-			Name: "Product",
-			Fields: []EntityField{
-				{Name: "id", Type: "int", Required: true},
-				{Name: "name", Type: "string", Required: true, Validation: "min=1,max=200"},
-				{Name: "description", Type: "string", Required: false},
-				{Name: "price", Type: "float", Required: true, Validation: "min=0"},
-				{Name: "quantity", Type: "int", Required: true, Validation: "min=0"},
-				{Name: "created_at", Type: "date", Required: true},
-			},
-			Operations: []string{"create", "read", "update", "delete"},
+		if strings.Contains(desc, "product") || strings.Contains(desc, "item") || strings.Contains(desc, "catalog") {
+			productEntity := Entity{
+				Name: "Product",
+				Fields: []EntityField{
+					{Name: "id", Type: "int", Required: true},
+					{Name: "name", Type: "string", Required: true, Validation: "min=1,max=200"},
+					{Name: "description", Type: "string", Required: false},
+					{Name: "price", Type: "float", Required: true, Validation: "min=0"},
+					{Name: "quantity", Type: "int", Required: true, Validation: "min=0"},
+					{Name: "created_at", Type: "date", Required: true},
+				},
+				Operations: []string{"create", "read", "update", "delete"},
+			}
+			appReq.Entities = append(appReq.Entities, productEntity)
+			appReq.Features = append(appReq.Features, "product_management")
 		}
-		appReq.Entities = append(appReq.Entities, productEntity)
-		appReq.Features = append(appReq.Features, "product_management", "storage_calculation")
-	}
+
+		if strings.Contains(desc, "storage") || strings.Contains(desc, "calculation") || strings.Contains(desc, "construction") {
+			storageEntity := Entity{
+				Name: "StorageRecord",
+				Fields: []EntityField{
+					{Name: "id", Type: "int", Required: true},
+					{Name: "material_name", Type: "string", Required: true},
+					{Name: "dimensions", Type: "string", Required: true},
+					{Name: "calculated_volume", Type: "float", Required: true},
+					{Name: "unit", Type: "string", Required: true},
+					{Name: "created_at", Type: "date", Required: true},
+				},
+				Operations: []string{"create", "read", "update", "delete"},
+			}
+			appReq.Entities = append(appReq.Entities, storageEntity)
+			appReq.Features = append(appReq.Features, "storage_calculation")
+		}
 
 	if strings.Contains(desc, "blog") || strings.Contains(desc, "post") || strings.Contains(desc, "article") {
 		postEntity := Entity{

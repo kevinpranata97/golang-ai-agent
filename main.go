@@ -16,6 +16,7 @@ import (
 	"github.com/kevinpranata97/golang-ai-agent/internal/codegen"
 	"github.com/kevinpranata97/golang-ai-agent/internal/database"
 	"github.com/kevinpranata97/golang-ai-agent/internal/finetuning"
+	"github.com/kevinpranata97/golang-ai-agent/internal/llm"
 	"github.com/kevinpranata97/golang-ai-agent/internal/requirements"
 	"github.com/kevinpranata97/golang-ai-agent/internal/selfheal"
 	"github.com/kevinpranata97/golang-ai-agent/internal/storage"
@@ -48,6 +49,9 @@ func main() {
 	outputDir := "./generated_apps"
 	codeGen := codegen.NewCodeGenerator(outputDir)
 
+	// Initialize LLM client for internal interactions
+	llmClient := llm.NewClient()
+
 	// Initialize Finetuner
 	finetuner := finetuning.NewFinetuner(db)
 
@@ -58,7 +62,7 @@ func main() {
 			if err := finetuner.ProcessLogs(); err != nil {
 				log.Printf("Error during scheduled fine-tuning: %v", err)
 			}
-			time.Sleep(5 * time.Minute) // Process every 5 minutes
+			time.Sleep(5 * time.Minute)
 		}
 	}()
 
@@ -81,11 +85,12 @@ func main() {
 				"fine_tuning",
 				"local_database_storage",
 				"self_healing",
+				"internal_llm_interaction",
 			},
 		})
 	})
 
-	// New endpoint for generating applications
+	// Unified endpoint for generating applications and general inquiries
 	http.HandleFunc("/generate-app", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -106,15 +111,32 @@ func main() {
 			return
 		}
 
+		// Detect if this is a general inquiry or an app generation request
+		if isGeneralInquiry(request.Description) {
+			response, err := llmClient.Interact(request.Description)
+			if err != nil {
+				log.Printf("LLM interaction failed: %v", err)
+				http.Error(w, fmt.Sprintf("Interaction failed: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"success": true,
+				"type":    "inquiry_response",
+				"message": response,
+			})
+			return
+		}
+
 		interactionLog := database.InteractionLog{
 			ID:             uuid.New().String(),
 			Timestamp:      time.Now(),
 			Endpoint:       "/generate-app",
-			RequestPayload: string(request.Description),
-			Status:         "success", // Default to success, update on error
+			RequestPayload: request.Description,
+			Status:         "success",
 		}
 
-		// Analyze requirements
 		appReq, err := reqAnalyzer.AnalyzeRequirements(request.Description)
 		if err != nil {
 			log.Printf("Failed to analyze requirements: %v", err)
@@ -124,7 +146,6 @@ func main() {
 			return
 		}
 
-		// Validate requirements
 		if err := reqAnalyzer.ValidateRequirements(appReq); err != nil {
 			log.Printf("Invalid requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Invalid requirements: %v", err), http.StatusBadRequest)
@@ -133,7 +154,6 @@ func main() {
 			return
 		}
 
-		// Generate application
 		if err := codeGen.GenerateApplication(appReq); err != nil {
 			log.Printf("Failed to generate application: %v", err)
 			http.Error(w, fmt.Sprintf("Failed to generate application: %v", err), http.StatusInternalServerError)
@@ -142,10 +162,10 @@ func main() {
 			return
 		}
 
-		// Return success response
 		w.Header().Set("Content-Type", "application/json")
 		jsonResponse, _ := json.Marshal(map[string]interface{}{
 			"success": true,
+			"type":    "app_generation",
 			"message": "Application generated successfully",
 			"app": map[string]interface{}{
 				"name":       appReq.Name,
@@ -162,12 +182,9 @@ func main() {
 		interactionLog.ResponsePayload = string(jsonResponse)
 		interactionLog.AppName = appReq.Name
 		interactionLog.AppPath = filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-")))
-		if err := db.InsertInteractionLog(interactionLog); err != nil {
-			log.Printf("Failed to log interaction: %v", err)
-		}
+		db.InsertInteractionLog(interactionLog)
 	})
 
-	// New endpoint for testing generated applications
 	http.HandleFunc("/test-app", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -192,12 +209,11 @@ func main() {
 			ID:             uuid.New().String(),
 			Timestamp:      time.Now(),
 			Endpoint:       "/test-app",
-			RequestPayload: string(request.AppPath),
+			RequestPayload: request.AppPath,
 			AppPath:        request.AppPath,
-			Status:         "success", // Default to success, update on error
+			Status:         "success",
 		}
 
-		// Check if app path exists
 		if _, err := os.Stat(request.AppPath); os.IsNotExist(err) {
 			http.Error(w, "Application path does not exist", http.StatusNotFound)
 			interactionLog.Status = "failure"
@@ -205,10 +221,6 @@ func main() {
 			return
 		}
 
-		// Load application requirements (this would typically be saved during generation)
-		// For now, we\'ll create a basic requirement structure
-
-		// Return test results (simplified since appTester is not available)
 		w.Header().Set("Content-Type", "application/json")
 		jsonResponse, _ := json.Marshal(map[string]interface{}{
 			"success":      true,
@@ -219,12 +231,9 @@ func main() {
 		w.Write(jsonResponse)
 
 		interactionLog.ResponsePayload = string(jsonResponse)
-		if err := db.InsertInteractionLog(interactionLog); err != nil {
-			log.Printf("Failed to log interaction: %v", err)
-		}
+		db.InsertInteractionLog(interactionLog)
 	})
 
-	// Combined endpoint for generating and testing applications
 	http.HandleFunc("/generate-and-test", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -249,11 +258,10 @@ func main() {
 			ID:             uuid.New().String(),
 			Timestamp:      time.Now(),
 			Endpoint:       "/generate-and-test",
-			RequestPayload: string(request.Description),
-			Status:         "success", // Default to success, update on error
+			RequestPayload: request.Description,
+			Status:         "success",
 		}
 
-		// Analyze requirements
 		appReq, err := reqAnalyzer.AnalyzeRequirements(request.Description)
 		if err != nil {
 			log.Printf("Failed to analyze requirements: %v", err)
@@ -263,7 +271,6 @@ func main() {
 			return
 		}
 
-		// Validate requirements
 		if err := reqAnalyzer.ValidateRequirements(appReq); err != nil {
 			log.Printf("Invalid requirements: %v", err)
 			http.Error(w, fmt.Sprintf("Invalid requirements: %v", err), http.StatusBadRequest)
@@ -272,10 +279,9 @@ func main() {
 			return
 		}
 
-		// Generate application
 		if err := codeGen.GenerateApplication(appReq); err != nil {
 			log.Printf("Failed to generate application: %v", err)
-			http.Error(w, fmt.Sprintf("Failed to generate application: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Failed to analyze requirements: %v", err), http.StatusInternalServerError)
 			interactionLog.Status = "failure"
 			db.InsertInteractionLog(interactionLog)
 			return
@@ -283,7 +289,6 @@ func main() {
 
 		appPath := filepath.Join(outputDir, strings.ToLower(strings.ReplaceAll(appReq.Name, " ", "-")))
 
-		// Return success response
 		w.Header().Set("Content-Type", "application/json")
 		responseMap := map[string]interface{}{
 			"success": true,
@@ -305,19 +310,14 @@ func main() {
 		interactionLog.ResponsePayload = string(jsonResponse)
 		interactionLog.AppName = appReq.Name
 		interactionLog.AppPath = appPath
-		if err := db.InsertInteractionLog(interactionLog); err != nil {
-			log.Printf("Failed to log interaction: %v", err)
-		}
+		db.InsertInteractionLog(interactionLog)
 	})
 
-	// Webhook endpoint (existing functionality)
 	http.HandleFunc("/webhook", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
-		// Process webhook (existing logic)
 		log.Println("Webhook received")
 		w.WriteHeader(http.StatusOK)
 	})
@@ -344,7 +344,6 @@ func main() {
 			return
 		}
 
-		// For self-heal, we need to analyze the requirements first
 		appReq, err := reqAnalyzer.AnalyzeRequirements(request.Description)
 		if err != nil {
 			log.Printf("Failed to analyze requirements for self-heal: %v", err)
@@ -363,23 +362,39 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"status": "Self-heal initiated successfully"})
 	})
 
-	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
 	log.Printf("Server starting on port %s", port)
-	log.Printf("Available endpoints:")
-	log.Printf("  GET  /health - Health check")
-	log.Printf("  GET  /status - Agent status")
-	log.Printf("  POST /generate-app - Generate application from description")
-	log.Printf("  POST /test-app - Test generated application")
-	log.Printf("  POST /generate-and-test - Generate and test application")
-	log.Printf("  POST /webhook - GitHub webhook")
-	log.Printf("  POST /self-heal - Attempt self-healing for a project")
-
 	if err := http.ListenAndServe("0.0.0.0:"+port, nil); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
+}
+
+func isGeneralInquiry(prompt string) bool {
+	creationKeywords := []string{
+		"create", "generate", "build", "make", "setup", "app", "application", "website", "service",
+	}
+	
+	lowerPrompt := strings.ToLower(prompt)
+	for _, kw := range creationKeywords {
+		if strings.Contains(lowerPrompt, kw) {
+			return false
+		}
+	}
+	
+	questionWords := []string{"what", "how", "why", "when", "where", "who", "can", "could", "should"}
+	for _, qw := range questionWords {
+		if strings.HasPrefix(lowerPrompt, qw) {
+			return true
+		}
+	}
+	
+	if strings.HasSuffix(lowerPrompt, "?") {
+		return true
+	}
+	
+	return len(prompt) < 50
 }
